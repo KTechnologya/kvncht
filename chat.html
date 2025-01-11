@@ -41,9 +41,10 @@
             color: #fff;
             text-transform: uppercase;
             text-align: left;
-            padding: 10px 10px 10px 50px;
+            padding: 10px 20px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
         }
         .chat-title h1 {
             font-weight: normal;
@@ -51,19 +52,13 @@
             margin: 0;
             padding: 0;
             font-family: 'Roboto Slab', serif;
+            display: flex;
+            align-items: center;
         }
-        .chat-title h2 {
-            color: rgba(255, 255, 255, .7);
-            font-size: 12px;
-            letter-spacing: 1px;
-            margin: 0;
-            padding: 0;
+        .chat-title h1 img {
+            margin-left: 10px;
         }
         .chat-title .avatar {
-            position: absolute;
-            z-index: 1;
-            top: 8px;
-            left: 9px;
             border-radius: 30px;
             width: 30px;
             height: 30px;
@@ -275,13 +270,12 @@
  <body>
   <div class="chat">
    <div class="chat-title">
-    <h1>
-     KelvinChat
-     <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png"/>
-    </h1>
-    <h2>
-     Grupo de Família
-    </h2>
+    <div>
+      <h1>
+       Grupo de Família
+       <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png"/>
+      </h1>
+    </div>
     <figure class="avatar">
      <img alt="Imagem de perfil do grupo" src="https://placehold.co/30x30"/>
     </figure>
