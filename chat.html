@@ -3,7 +3,7 @@
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>
-   KelvinChat Grupo de Família
+   Grupo de Família
   </title>
   <script src="https://cdn.tailwindcss.com">
   </script>
@@ -40,11 +40,11 @@
             background: #248A52;
             color: #fff;
             text-transform: uppercase;
-            text-align: left;
+            text-align: center;
             padding: 10px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
         }
         .chat-title h1 {
             font-weight: normal;
@@ -52,24 +52,6 @@
             margin: 0;
             padding: 0;
             font-family: 'Roboto Slab', serif;
-            display: flex;
-            align-items: center;
-        }
-        .chat-title h1 img {
-            margin-left: 10px;
-        }
-        .chat-title .avatar {
-            border-radius: 30px;
-            width: 30px;
-            height: 30px;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            border: 2px solid rgba(255, 255, 255, 0.24);
-        }
-        .chat-title .avatar img {
-            width: 100%;
-            height: auto;
         }
         .messages {
             flex: 1 1 auto;
@@ -250,12 +232,6 @@
         .message-box .audio-submit:hover, .message-box .image-submit:hover {
             background: #1D7745;
         }
-        .verified-icon {
-            width: 16px;
-            height: 16px;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
         .message-header {
             display: flex;
             align-items: center;
@@ -270,15 +246,9 @@
  <body>
   <div class="chat">
    <div class="chat-title">
-    <div>
-      <h1>
-       Grupo de Família
-       <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png"/>
-      </h1>
-    </div>
-    <figure class="avatar">
-     <img alt="Imagem de perfil do grupo" src="https://placehold.co/30x30"/>
-    </figure>
+    <h1>
+     Grupo de Família
+    </h1>
    </div>
    <div class="messages">
     <div class="messages-content">
@@ -289,7 +259,6 @@
       <div class="message-header">
        <strong>
         João
-        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
        </strong>
       </div>
       Oi pessoal, como vocês estão?
@@ -301,7 +270,6 @@
       <div class="message-header">
        <strong>
         Você
-        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
        </strong>
       </div>
       Estou bem, obrigado! E você?
@@ -316,7 +284,6 @@
       <div class="message-header">
        <strong>
         Jane
-        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
        </strong>
       </div>
       Estou bem, acabei de tomar café da manhã.
@@ -331,7 +298,6 @@
       <div class="message-header">
        <strong>
         Pai
-        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
        </strong>
       </div>
       Bom dia a todos!
@@ -343,7 +309,6 @@
       <div class="message-header">
        <strong>
         Você
-        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
        </strong>
       </div>
       Bom dia, Pai!
@@ -358,7 +323,6 @@
       <div class="message-header">
        <strong>
         Mãe
-        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
        </strong>
       </div>
       Bom dia! Qual é o plano para hoje?
@@ -404,7 +368,7 @@
             if ($.trim(msg) == '') {
                 return false;
             }
-            $('<div class="message message-personal new"><div class="message-header"><strong>Você <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/></strong></div>' + msg + '</div>').appendTo($('.messages-content')).addClass('new');
+            $('<div class="message message-personal new"><div class="message-header"><strong>Você</strong></div>' + msg + '</div>').appendTo($('.messages-content')).addClass('new');
             setDate();
             $('.message-input').val(null);
             updateScrollbar();
