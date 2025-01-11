@@ -16,20 +16,19 @@
             font-size: 12px;
             line-height: 1.3;
             overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
         .chat {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            height: 90vh;
-            max-height: 700px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
             z-index: 2;
             overflow: hidden;
             box-shadow: 0 5px 30px rgba(0, 0, 0, .2);
             background: #fff;
-            border-radius: 20px;
             display: flex;
             justify-content: space-between;
             flex-direction: column;
@@ -43,17 +42,22 @@
             text-transform: uppercase;
             text-align: left;
             padding: 10px 10px 10px 50px;
+            display: flex;
+            align-items: center;
         }
-        .chat-title h1, .chat-title h2 {
+        .chat-title h1 {
             font-weight: normal;
-            font-size: 14px;
+            font-size: 18px;
             margin: 0;
             padding: 0;
+            font-family: 'Roboto Slab', serif;
         }
         .chat-title h2 {
             color: rgba(255, 255, 255, .7);
             font-size: 12px;
             letter-spacing: 1px;
+            margin: 0;
+            padding: 0;
         }
         .chat-title .avatar {
             position: absolute;
