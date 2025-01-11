@@ -1,1 +1,428 @@
-oi
+<html lang="pt-BR">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   KelvinChat Grupo de Família
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+            background: #f0f0f0;
+            font-family: 'Roboto Slab', serif;
+            font-size: 12px;
+            line-height: 1.3;
+            overflow: hidden;
+        }
+        .chat {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90vh;
+            max-height: 700px;
+            z-index: 2;
+            overflow: hidden;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, .2);
+            background: #fff;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+        }
+        .chat-title {
+            flex: 0 1 45px;
+            position: relative;
+            z-index: 2;
+            background: #248A52;
+            color: #fff;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 10px 10px 10px 50px;
+        }
+        .chat-title h1, .chat-title h2 {
+            font-weight: normal;
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+        }
+        .chat-title h2 {
+            color: rgba(255, 255, 255, .7);
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        .chat-title .avatar {
+            position: absolute;
+            z-index: 1;
+            top: 8px;
+            left: 9px;
+            border-radius: 30px;
+            width: 30px;
+            height: 30px;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            border: 2px solid rgba(255, 255, 255, 0.24);
+        }
+        .chat-title .avatar img {
+            width: 100%;
+            height: auto;
+        }
+        .messages {
+            flex: 1 1 auto;
+            color: rgba(0, 0, 0, .7);
+            overflow-y: auto;
+            position: relative;
+            width: 100%;
+            padding: 10px;
+        }
+        .messages .messages-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        .message {
+            clear: both;
+            float: left;
+            padding: 6px 10px 7px;
+            border-radius: 10px 10px 10px 0;
+            background: #e0e0e0;
+            margin: 8px 0;
+            font-size: 12px;
+            line-height: 1.4;
+            margin-left: 35px;
+            position: relative;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+        }
+        .message .timestamp {
+            position: absolute;
+            bottom: -15px;
+            font-size: 10px;
+            color: rgba(0, 0, 0, .5);
+        }
+        .message::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            border-top: 6px solid #e0e0e0;
+            left: 0;
+            border-right: 7px solid transparent;
+        }
+        .message .avatar {
+            position: absolute;
+            z-index: 1;
+            bottom: -15px;
+            left: -35px;
+            border-radius: 30px;
+            width: 30px;
+            height: 30px;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            border: 2px solid rgba(255, 255, 255, 0.24);
+        }
+        .message .avatar img {
+            width: 100%;
+            height: auto;
+        }
+        .message.message-personal {
+            float: right;
+            color: #fff;
+            text-align: right;
+            background: #248A52;
+            border-radius: 10px 10px 0 10px;
+            margin-left: 0;
+            margin-right: 35px;
+        }
+        .message.message-personal::before {
+            left: auto;
+            right: 0;
+            border-right: none;
+            border-left: 5px solid transparent;
+            border-top: 4px solid #248A52;
+            bottom: -4px;
+        }
+        .message:last-child {
+            margin-bottom: 30px;
+        }
+        .message.new {
+            transform: scale(0);
+            transform-origin: 0 0;
+            animation: bounce 500ms linear both;
+        }
+        .message.loading::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .5);
+            z-index: 2;
+            margin-top: 4px;
+            animation: ball .45s cubic-bezier(0, 0, 0.15, 1) alternate infinite;
+            border: none;
+            animation-delay: .15s;
+        }
+        .message.loading span {
+            display: block;
+            font-size: 0;
+            width: 20px;
+            height: 10px;
+            position: relative;
+        }
+        .message.loading span::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .5);
+            z-index: 2;
+            margin-top: 4px;
+            animation: ball .45s cubic-bezier(0, 0, 0.15, 1) alternate infinite;
+            margin-left: -7px;
+        }
+        .message.loading span::after {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .5);
+            z-index: 2;
+            margin-top: 4px;
+            animation: ball .45s cubic-bezier(0, 0, 0.15, 1) alternate infinite;
+            margin-left: 7px;
+            animation-delay: .3s;
+        }
+        .message-box {
+            flex: 0 1 40px;
+            width: 100%;
+            background: #f0f0f0;
+            padding: 10px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .message-box .message-input {
+            background: none;
+            border: none;
+            outline: none!important;
+            resize: none;
+            color: rgba(0, 0, 0, .7);
+            font-size: 12px;
+            height: 17px;
+            margin: 0;
+            padding-right: 20px;
+            width: 300px;
+        }
+        .message-box .message-submit {
+            color: #fff;
+            border: none;
+            background: #248A52;
+            font-size: 10px;
+            text-transform: uppercase;
+            line-height: 1;
+            padding: 6px 10px; 
+            border-radius: 10px;
+            outline: none!important;
+            transition: background .2s ease;
+            margin-left: 10px;
+        }
+        .message-box .message-submit:hover {
+            background: #1D7745;
+        }
+        .message-box .audio-submit, .message-box .image-submit {
+            color: #fff;
+            border: none;
+            background: #248A52;
+            font-size: 16px;
+            padding: 6px 10px; 
+            border-radius: 50%;
+            outline: none!important;
+            transition: background .2s ease;
+            margin-left: 10px;
+        }
+        .message-box .audio-submit:hover, .message-box .image-submit:hover {
+            background: #1D7745;
+        }
+        .verified-icon {
+            width: 16px;
+            height: 16px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .message-header strong {
+            display: flex;
+            align-items: center;
+        }
+  </style>
+ </head>
+ <body>
+  <div class="chat">
+   <div class="chat-title">
+    <h1>
+     KelvinChat
+     <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png"/>
+    </h1>
+    <h2>
+     Grupo de Família
+    </h2>
+    <figure class="avatar">
+     <img alt="Imagem de perfil do grupo" src="https://placehold.co/30x30"/>
+    </figure>
+   </div>
+   <div class="messages">
+    <div class="messages-content">
+     <div class="message new">
+      <figure class="avatar">
+       <img alt="Imagem de perfil de João" src="https://placehold.co/30x30"/>
+      </figure>
+      <div class="message-header">
+       <strong>
+        João
+        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </strong>
+      </div>
+      Oi pessoal, como vocês estão?
+      <div class="timestamp">
+       10:00
+      </div>
+     </div>
+     <div class="message message-personal new">
+      <div class="message-header">
+       <strong>
+        Você
+        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </strong>
+      </div>
+      Estou bem, obrigado! E você?
+      <div class="timestamp">
+       10:01
+      </div>
+     </div>
+     <div class="message new">
+      <figure class="avatar">
+       <img alt="Imagem de perfil de Jane" src="https://placehold.co/30x30"/>
+      </figure>
+      <div class="message-header">
+       <strong>
+        Jane
+        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </strong>
+      </div>
+      Estou bem, acabei de tomar café da manhã.
+      <div class="timestamp">
+       10:02
+      </div>
+     </div>
+     <div class="message new">
+      <figure class="avatar">
+       <img alt="Imagem de perfil do Pai" src="https://placehold.co/30x30"/>
+      </figure>
+      <div class="message-header">
+       <strong>
+        Pai
+        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </strong>
+      </div>
+      Bom dia a todos!
+      <div class="timestamp">
+       10:03
+      </div>
+     </div>
+     <div class="message message-personal new">
+      <div class="message-header">
+       <strong>
+        Você
+        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </strong>
+      </div>
+      Bom dia, Pai!
+      <div class="timestamp">
+       10:04
+      </div>
+     </div>
+     <div class="message new">
+      <figure class="avatar">
+       <img alt="Imagem de perfil da Mãe" src="https://placehold.co/30x30"/>
+      </figure>
+      <div class="message-header">
+       <strong>
+        Mãe
+        <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </strong>
+      </div>
+      Bom dia! Qual é o plano para hoje?
+      <div class="timestamp">
+       10:05
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="message-box">
+    <textarea class="message-input" placeholder="Digite uma mensagem..." type="text"></textarea>
+    <button class="message-submit" type="submit">
+     Enviar
+    </button>
+    <button class="audio-submit">
+     <i class="fas fa-microphone">
+     </i>
+    </button>
+    <button class="image-submit">
+     <i class="fas fa-image">
+     </i>
+    </button>
+   </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js">
+  </script>
+  <script>
+   $(document).ready(function() {
+        var $messages = $('.messages-content');
+
+        function updateScrollbar() {
+            $messages.scrollTop($messages.prop("scrollHeight"));
+        }
+
+        function setDate() {
+            var d = new Date();
+            var m = d.getMinutes();
+            $('<div class="timestamp">' + d.getHours() + ':' + (m < 10 ? '0' + m : m) + '</div>').appendTo($('.message:last'));
+        }
+
+        function insertMessage() {
+            var msg = $('.message-input').val();
+            if ($.trim(msg) == '') {
+                return false;
+            }
+            $('<div class="message message-personal new"><div class="message-header"><strong>Você <img alt="Ícone de verificado" class="verified-icon" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/></strong></div>' + msg + '</div>').appendTo($('.messages-content')).addClass('new');
+            setDate();
+            $('.message-input').val(null);
+            updateScrollbar();
+        }
+
+        $('.message-submit').click(function() {
+            insertMessage();
+        });
+
+        $(window).on('keydown', function(e) {
+            if (e.which == 13) {
+                insertMessage();
+                return false;
+            }
+        });
+    });
+  </script>
+ </body>
+</html>
