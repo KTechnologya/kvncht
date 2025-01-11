@@ -1,1 +1,410 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Grupo de Família</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      background: #f0f0f0;
+      font-family: 'Roboto Slab', serif;
+      font-size: 12px;
+      line-height: 1.3;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    .chat {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 2;
+      overflow: hidden;
+      box-shadow: 0 5px 30px rgba(0, 0, 0, .2);
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      flex-direction: column;
+    }
+    .chat-title {
+      flex: 0 1 45px;
+      position: relative;
+      z-index: 2;
+      background: #248A52;
+      color: #fff;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-title h1 {
+      font-weight: normal;
+      font-size: 18px;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto Slab', serif;
+    }
+    .messages {
+      flex: 1 1 auto;
+      color: rgba(0, 0, 0, .7);
+      overflow-y: auto;
+      position: relative;
+      width: 100%;
+      padding: 10px;
+    }
+    .messages .messages-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+    .message {
+      clear: both;
+      float: left;
+      padding: 6px 10px 7px;
+      border-radius: 10px 10px 10px 0;
+      background: #e0e0e0;
+      margin: 8px 0;
+      font-size: 12px;
+      line-height: 1.4;
+      margin-left: 35px;
+      position: relative;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+    }
+    .message .timestamp {
+      position: absolute;
+      bottom: -15px;
+      font-size: 10px;
+      color: rgba(0, 0, 0, .5);
+    }
+    .message::before {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      border-top: 6px solid #e0e0e0;
+      left: 0;
+      border-right: 7px solid transparent;
+    }
+    .message .avatar {
+      position: absolute;
+      z-index: 1;
+      bottom: -15px;
+      left: -35px;
+      border-radius: 30px;
+      width: 30px;
+      height: 30px;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      border: 2px solid rgba(255, 255, 255, 0.24);
+    }
+    .message .avatar img {
+      width: 100%;
+      height: auto;
+    }
+    .message.message-personal {
+      float: right;
+      color: #fff;
+      text-align: right;
+      background: #248A52;
+      border-radius: 10px 10px 0 10px;
+      margin-left: 0;
+      margin-right: 35px;
+    }
+    .message.message-personal::before {
+      left: auto;
+      right: 0;
+      border-right: none;
+      border-left: 5px solid transparent;
+      border-top: 4px solid #248A52;
+      bottom: -4px;
+    }
+    .message:last-child {
+      margin-bottom: 30px;
+    }
+    .message.new {
+      transform: scale(0);
+      transform-origin: 0 0;
+      animation: bounce 500ms linear both;
+    }
+    .message.loading::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .5);
+      z-index: 2;
+      margin-top: 4px;
+      animation: ball .45s cubic-bezier(0, 0, 0.15, 1) alternate infinite;
+      border: none;
+      animation-delay: .15s;
+    }
+    .message.loading span {
+      display: block;
+      font-size: 0;
+      width: 20px;
+      height: 10px;
+      position: relative;
+    }
+    .message.loading span::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .5);
+      z-index: 2;
+      margin-top: 4px;
+      animation: ball .45s cubic-bezier(0, 0, 0.15, 1) alternate infinite;
+      margin-left: -7px;
+    }
+    .message.loading span::after {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .5);
+      z-index: 2;
+      margin-top: 4px;
+      animation: ball .45s cubic-bezier(0, 0, 0.15, 1) alternate infinite;
+      margin-left: 7px;
+      animation-delay: .3s;
+    }
+    .message-box {
+      flex: 0 1 40px;
+      width: 100%;
+      background: #f0f0f0;
+      padding: 10px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .message-box .message-input {
+      background: none;
+      border: none;
+      outline: none!important;
+      resize: none;
+      color: rgba(0, 0, 0, .7);
+      font-size: 12px;
+      height: 17px;
+      margin: 0;
+      padding-right: 20px;
+      width: 300px;
+    }
+    .message-box .message-submit {
+      color: #fff;
+      border: none;
+      background: #248A52;
+      font-size: 10px;
+      text-transform: uppercase;
+      line-height: 1;
+      padding: 6px 10px; 
+      border-radius: 10px;
+      outline: none!important;
+      transition: background .2s ease;
+      margin-left: 10px;
+    }
+    .message-box .message-submit:hover {
+      background: #1D7745;
+    }
+    .message-box .audio-submit, .message-box .image-submit {
+      color: #fff;
+      border: none;
+      background: #248A52;
+      font-size: 16px;
+      padding: 6px 10px; 
+      border-radius: 50%;
+      outline: none!important;
+      transition: background .2s ease;
+      margin-left: 10px;
+    }
+    .message-box .audio-submit:hover, .message-box .image-submit:hover {
+      background: #1D7745;
+    }
+    .message-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .message-header strong {
+      display: flex;
+      align-items: center;
+    }
+    #popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      box-shadow: 0 5px 30px rgba(0, 0, 0, .2);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="popup" style="display: none;">
+    <h2>Bem-vindo! Por favor, insira suas informações</h2>
+    <input type="text" id="nomeCompleto" placeholder="Nome Completo" required>
+    <input type="file" id="fotoPerfil" accept="image/*" required>
+    <button onclick="salvarInformacoes()">Salvar</button>
+  </div>
+
+  <div class="chat">
+    <div class="chat-title">
+      <h1>Grupo de Família</h1>
+    </div>
+    <div class="messages">
+      <div class="messages-content" id="messages-content"></div>
+    </div>
+    <div class="message-box">
+      <textarea class="message-input" id="message-input" placeholder="Digite uma mensagem..."></textarea>
+      <button class="message-submit" onclick="enviarMensagem()">Enviar</button>
+      <button class="audio-submit">
+        <i class="fas fa-microphone"></i>
+      </button>
+      <button class="image-submit">
+        <i class="fas fa-image"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+      authDomain: "kelvinchat-f9499.firebaseapp.com",
+      databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+      projectId: "kelvinchat-f9499",
+      storageBucket: "kelvinchat-f9499.appspot.com",
+      messagingSenderId: "972962322611",
+      appId: "1:972962322611:web:ff5416bb049abea350f8c6",
+      measurementId: "G-K99GCK98ZR"
+    };
+
+    // Inicialize o Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        const userId = user.uid;
+        const userRef = firebase.database().ref('usuarios/' + userId);
+
+        userRef.once('value').then((snapshot) => {
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            if (userData.banido) {
+              window.location.href = 'banido.html';
+            } else {
+              // Carregar dados do usuário e exibir o chat
+              carregarChat(userData);
+            }
+          } else {
+            // Exibir popup obrigatório
+            document.getElementById('popup').style.display = 'block';
+          }
+        });
+      } else {
+        // Redirecionar para a página de login
+        window.location.href = 'login.html';
+      }
+    });
+
+    function salvarInformacoes() {
+      const nomeCompleto = document.getElementById('nomeCompleto').value;
+      const fotoPerfil = document.getElementById('fotoPerfil').files[0];
+      const userId = firebase.auth().currentUser.uid;
+      const userRef = firebase.database().ref('usuarios/' + userId);
+
+      if (nomeCompleto && fotoPerfil) {
+        const storageRef = firebase.storage().ref('fotosPerfil/' + userId);
+        storageRef.put(fotoPerfil).then((snapshot) => {
+          snapshot.ref.getDownloadURL().then((url) => {
+            const dataCadastro = new Date().toLocaleDateString('pt-BR');
+            userRef.set({
+              nome: nomeCompleto,
+              fotoPerfil: url,
+              verificado: false,
+              ceo: false,
+              banido: false,
+              mensagens: [],
+              cadastro: dataCadastro
+            }).then(() => {
+              document.getElementById('popup').style.display = 'none';
+              carregarChat({ nome: nomeCompleto, fotoPerfil: url });
+            });
+          });
+        });
+      } else {
+        alert('Por favor, preencha todas as informações.');
+      }
+    }
+
+    function carregarChat(userData) {
+      const messagesRef = firebase.database().ref('Chat');
+      const messagesContent = document.getElementById('messages-content');
+
+      messagesRef.on('child_added', (snapshot) => {
+        const message = snapshot.val();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        if (message.id_do_usuario === firebase.auth().currentUser.uid) {
+          messageElement.classList.add('message-personal');
+        }
+        messageElement.innerHTML = `
+          <figure class="avatar"><img src="${message.foto_perfil}" alt="Foto de perfil"></figure>
+          <div class="message-header"><strong>${message.nome}</strong></div>
+          ${message.conteudo}
+          <div class="timestamp">${new Date(message.timestamp).toLocaleTimeString('pt-BR')}</div>
+        `;
+        messagesContent.appendChild(messageElement);
+        messagesContent.scrollTop = messagesContent.scrollHeight;
+      });
+
+      messagesRef.on('child_removed', (snapshot) => {
+        const messageElement = document.querySelector(`[data-id="${snapshot.key}"]`);
+        if (messageElement) {
+          messageElement.innerHTML = 'Essa mensagem foi excluída por um administrador.';
+        }
+      });
+    }
+
+    function enviarMensagem() {
+      const messageInput = document.getElementById('message-input');
+      const messageContent = messageInput.value.trim();
+      if (messageContent) {
+        const userId = firebase.auth().currentUser.uid;
+        const userRef = firebase.database().ref('usuarios/' + userId);
+        userRef.once('value').then((snapshot) => {
+          const userData = snapshot.val();
+          const messagesRef = firebase.database().ref('Chat');
+          const newMessageRef = messagesRef.push();
+          newMessageRef.set({
+            id_do_usuario: userId,
+            nome: userData.nome,
+            foto_perfil: userData.fotoPerfil,
+            conteudo: messageContent,
+            timestamp: Date.now()
+          });
+          messageInput.value = '';
+        });
+      }
+    }
+  </script>
+</body>
+</html>
+
