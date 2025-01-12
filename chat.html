@@ -4,174 +4,129 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KelvinChat</title>
-  <script type="module">
-    // Importação do Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue, push, update } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-
-    // Configuração Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
-      authDomain: "kelvinchat-f9499.firebaseapp.com",
-      databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
-      projectId: "kelvinchat-f9499",
-      storageBucket: "kelvinchat-f9499.storage.app",
-      messagingSenderId: "972962322611",
-      appId: "1:972962322611:web:ff5416bb049abea350f8c6",
-      measurementId: "G-K99GCK98ZR",
-    };
-
-    // Inicialização do Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // Cadastro de usuário
-    const userId = localStorage.getItem("userId") || push(ref(db, "users")).key;
-    localStorage.setItem("userId", userId);
-
-    function generateRandomName() {
-      const adjectives = ["Brave", "Smart", "Quick", "Silent"];
-      const nouns = ["Lion", "Falcon", "Tiger", "Eagle"];
-      return adjectives[Math.floor(Math.random() * adjectives.length)] + " " + nouns[Math.floor(Math.random() * nouns.length)];
-    }
-
-    const userName = localStorage.getItem("userName") || generateRandomName();
-    localStorage.setItem("userName", userName);
-
-    const profilePicture = "https://example.com/default-profile.png"; // URL padrão de foto
-    const userRef = ref(db, `users/${userId}`);
-    onValue(userRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        const userData = {
-          id: userId,
-          nome: userName,
-          foto_perfil: profilePicture,
-          verificado: false,
-          ceo: false,
-          banido: false,
-          mensagens: [],
-          cadastro: new Date().toLocaleDateString("pt-BR"),
-        };
-        set(userRef, userData);
-      } else {
-        const userData = snapshot.val();
-        if (userData.banido) {
-          window.location.href = "banido.html";
-        }
-      }
-    });
-
-    // Função para enviar mensagens
-    function sendMessage(content) {
-      const chatRef = ref(db, "chat");
-      const timestamp = new Date().toISOString();
-      const message = {
-        id_do_usuario: userId,
-        nome: userName,
-        foto_perfil: profilePicture,
-        conteudo: content,
-        timestamp: timestamp,
-      };
-      push(chatRef, message);
-    }
-
-    // Função para carregar mensagens
-    function loadMessages() {
-      const chatRef = ref(db, "chat");
-      const messagesContainer = document.getElementById("messages");
-      onValue(chatRef, (snapshot) => {
-        messagesContainer.innerHTML = ""; // Limpar mensagens antigas
-        snapshot.forEach((messageSnapshot) => {
-          const message = messageSnapshot.val();
-          const messageElement = document.createElement("div");
-
-          if (message.conteudo === "__deleted__") {
-            messageElement.textContent = "Essa mensagem foi excluída por um administrador.";
-          } else {
-            messageElement.innerHTML = `
-              <img src="${message.foto_perfil}" alt="${message.nome}" width="30" />
-              <strong>${message.nome}</strong>
-              ${message.verificado ? '<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" alt="Verificado" width="20" />' : ""}
-              ${message.ceo ? '<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png" alt="CEO" width="20" />' : ""}
-              <p>${message.conteudo}</p>
-              <small>${new Date(message.timestamp).toLocaleString("pt-BR")}</small>
-            `;
-          }
-          messagesContainer.appendChild(messageElement);
-        });
-      });
-    }
-
-    // Inicializar o chat
-    document.addEventListener("DOMContentLoaded", () => {
-      loadMessages();
-      document.getElementById("send-message").addEventListener("click", () => {
-        const messageInput = document.getElementById("message-input");
-        const messageContent = messageInput.value.trim();
-        if (messageContent) {
-          sendMessage(messageContent);
-          messageInput.value = "";
-        }
-      });
-    });
-
-    // Função para excluir mensagens
-    function deleteMessage(messageId) {
-      update(ref(db, `chat/${messageId}`), {
-        conteudo: "__deleted__",
-      });
-    }
-  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400&display=swap" rel="stylesheet">
   <style>
-    /* Estilos básicos */
-    #chat-container {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      background-color: #f9f9f9;
-    }
-    #messages {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      height: 300px;
-      overflow-y: auto;
-      background-color: #fff;
-    }
-    textarea {
-      width: calc(100% - 20px);
-      margin: 10px 0;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      resize: none;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    img {
-      border-radius: 50%;
-      margin-right: 10px;
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
     }
   </style>
 </head>
-<body>
-  <div id="chat-container">
-    <div id="messages"></div>
-    <textarea id="message-input" placeholder="Digite sua mensagem"></textarea>
-    <button id="send-message">Enviar</button>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+  <div id="name-container" class="flex flex-col justify-center items-center bg-blue-500 text-white p-6 rounded-lg w-full max-w-md">
+    <h1 class="text-2xl mb-4">Bem-vindo ao KelvinChat</h1>
+    <input type="text" id="name-input" placeholder="Digite seu nome" class="p-2 text-gray-800 rounded mb-4 w-full max-w-xs">
+    <button id="enter-chat" class="p-2 bg-blue-700 text-white rounded w-full max-w-xs">Entrar</button>
   </div>
+
+  <div id="chat-container" class="hidden flex-col bg-white w-full max-w-lg h-4/5 rounded-lg shadow-lg">
+    <div id="header" class="bg-blue-500 text-white p-4 text-center rounded-t-lg">KelvinChat</div>
+    <div id="messages" class="flex-1 overflow-y-auto p-4 bg-gray-100"></div>
+    <div id="input-container" class="flex items-center p-4 bg-gray-200 rounded-b-lg">
+      <input type="text" id="message-input" placeholder="Digite sua mensagem" class="flex-1 p-2 border border-gray-300 rounded">
+      <button id="send-button" class="p-2 bg-blue-500 text-white rounded ml-2">Enviar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, get, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPCljNgir3YlR1UV6h3Qyik84AYOp0u4A",
+      authDomain: "crmpro-6b032.firebaseapp.com",
+      databaseURL: "https://crmpro-6b032-default-rtdb.firebaseio.com",
+      projectId: "crmpro-6b032",
+      storageBucket: "crmpro-6b032.appspot.com",
+      messagingSenderId: "491350225551",
+      appId: "1:491350225551:web:0dd6f83a2d49752ca9b6fa",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const usersRef = ref(database, 'Users');
+    const chatRef = ref(database, 'chat');
+
+    const nameContainer = document.getElementById("name-container");
+    const chatContainer = document.getElementById("chat-container");
+    const nameInput = document.getElementById("name-input");
+    const enterChatButton = document.getElementById("enter-chat");
+    const messagesDiv = document.getElementById("messages");
+    const messageInput = document.getElementById("message-input");
+    const sendButton = document.getElementById("send-button");
+
+    let username = localStorage.getItem('username') || '';
+    let userId = localStorage.getItem('userId') || null;
+
+    // Criar usuário no Firebase se não existir
+    function createUserNode() {
+      if (username && !userId) {
+        const newUserRef = push(usersRef);
+        userId = newUserRef.key;
+        set(newUserRef, {
+          name: username,
+          blocked: false,
+        });
+        localStorage.setItem('userId', userId);
+      }
+    }
+
+    // Verificar se o usuário está bloqueado
+    function checkUserBlocked() {
+      if (!userId) return;
+      get(ref(database, `Users/${userId}`)).then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          if (userData.blocked) {
+            window.location.href = 'banido.html'; // Redireciona se estiver bloqueado
+          } else {
+            showChat();
+          }
+        }
+      });
+    }
+
+    // Exibir chat
+    function showChat() {
+      nameContainer.style.display = "none";
+      chatContainer.style.display = "flex";
+    }
+
+    // Lidar com botão de entrar
+    enterChatButton.addEventListener("click", () => {
+      username = nameInput.value.trim();
+      if (username) {
+        localStorage.setItem('username', username);
+        createUserNode();
+        checkUserBlocked();
+      } else {
+        alert("Por favor, insira seu nome!");
+      }
+    });
+
+    // Enviar mensagens
+    sendButton.addEventListener("click", () => {
+      const text = messageInput.value.trim();
+      if (text && userId) {
+        push(chatRef, { sender: username, text, userId });
+        messageInput.value = "";
+      }
+    });
+
+    // Carregar mensagens
+    onValue(chatRef, (snapshot) => {
+      messagesDiv.innerHTML = "";
+      snapshot.forEach((childSnapshot) => {
+        const message = childSnapshot.val();
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("mb-2");
+        messageDiv.textContent = `${message.sender}: ${message.text}`;
+        messagesDiv.appendChild(messageDiv);
+      });
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  </script>
 </body>
 </html>
