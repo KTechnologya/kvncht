@@ -195,6 +195,8 @@
             background: rgba(0, 0, 0, 0.3);
             padding: 10px;
             position: relative;
+            display: flex;
+            align-items: center;
         }
         .message-box .message-input {
             background: none;
@@ -206,13 +208,9 @@
             height: 17px;
             margin: 0;
             padding-right: 20px;
-            width: 265px;
+            width: 200px;
         }
         .message-box .message-submit {
-            position: absolute;
-            z-index: 1;
-            top: 9px;
-            right: 10px;
             color: #fff;
             border: none;
             background: #248A52;
@@ -223,9 +221,61 @@
             border-radius: 10px;
             outline: none!important;
             transition: background .2s ease;
+            margin-left: 5px;
         }
         .message-box .message-submit:hover {
             background: #1D7745;
+        }
+        .message-box .menu-button {
+            color: #fff;
+            border: none;
+            background: #248A52;
+            font-size: 10px;
+            text-transform: uppercase;
+            line-height: 1;
+            padding: 6px 10px; 
+            border-radius: 10px;
+            outline: none!important;
+            transition: background .2s ease;
+            margin-right: 5px;
+        }
+        .message-box .menu-button:hover {
+            background: #1D7745;
+        }
+        .message-box .voice-button {
+            color: #fff;
+            border: none;
+            background: #248A52;
+            font-size: 10px;
+            text-transform: uppercase;
+            line-height: 1;
+            padding: 6px 10px; 
+            border-radius: 10px;
+            outline: none!important;
+            transition: background .2s ease;
+            margin-left: 5px;
+        }
+        .message-box .voice-button:hover {
+            background: #1D7745;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            bottom: 50px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            z-index: 3;
+        }
+        .dropdown-menu a {
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            margin: 5px 0;
+        }
+        .dropdown-menu a:hover {
+            text-decoration: underline;
         }
         @keyframes bounce { 
             0% { transform: matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
@@ -265,8 +315,14 @@
             <div class="messages-content"></div>
         </div>
         <div class="message-box">
+            <button class="menu-button"><i class="fas fa-plus"></i></button>
             <textarea type="text" class="message-input" placeholder="Digite a mensagem..."></textarea>
-            <button type="submit" class="message-submit">Enviar</button>
+            <button class="message-submit">Enviar</button>
+            <button class="voice-button"><i class="fas fa-microphone"></i></button>
+            <div class="dropdown-menu">
+                <a href="#"><i class="fas fa-camera"></i> Enviar Foto</a>
+                <a href="#"><i class="fas fa-image"></i> Enviar Imagem</a>
+            </div>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -351,6 +407,10 @@
                 i++;
             }, 1000 + (Math.random() * 20) * 100);
         }
+
+        $('.menu-button').click(function() {
+            $('.dropdown-menu').toggle();
+        });
     </script>
 </body>
 </html>
