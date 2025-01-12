@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Chat da Família</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Real-time</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <script type="module">
-        // Firebase SDK imports
+        // Importações Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getDatabase, ref, push, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, update, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
-        // Firebase configuration
+        // Configuração Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
             authDomain: "kelvinchat-f9499.firebaseapp.com",
@@ -25,21 +25,21 @@
             measurementId: "G-K99GCK98ZR"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
+        const storage = getStorage(app);
 
-        // Helper function to fetch user data and display chat
         let currentUser = null;
 
+        // Inicializar o chat
         function initializeChat() {
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     const userRef = ref(database, `users/${user.uid}`);
                     onValue(userRef, (snapshot) => {
                         const userData = snapshot.val();
-                        if (userData.banned) {
+                        if (userData && userData.banned) {
                             window.location.href = "banido.html";
                         } else {
                             currentUser = { uid: user.uid, ...userData };
@@ -52,11 +52,12 @@
             });
         }
 
-        // Load messages from database
+        // Carregar mensagens do chat
         function loadChatMessages() {
             const chatRef = ref(database, 'chat');
+            const chatList = document.getElementById('chat-list');
+
             onValue(chatRef, (snapshot) => {
-                const chatList = document.getElementById('chat-list');
                 chatList.innerHTML = '';
                 snapshot.forEach((childSnapshot) => {
                     const message = childSnapshot.val();
@@ -67,7 +68,7 @@
             });
         }
 
-        // Create message element
+        // Criar elemento de mensagem
         function createMessageElement(message, key) {
             const verifiedIcon = message.verified
                 ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" class="w-4 h-4 ml-2"/>`
@@ -96,66 +97,71 @@
             `;
         }
 
-        // Send a new message
+        // Enviar mensagem
         function sendMessage() {
             const messageInput = document.getElementById('message-input');
             const message = messageInput.value.trim();
+
             if (message && currentUser) {
                 const chatRef = ref(database, 'chat');
                 push(chatRef, {
                     name: currentUser.name,
                     content: message,
-                    verified: currentUser.verified,
-                    ceo: currentUser.ceo,
+                    verified: currentUser.verified || false,
+                    ceo: currentUser.ceo || false,
                     timestamp: Date.now()
                 });
                 messageInput.value = '';
             }
         }
 
-        // Handle file upload
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
+        // Enviar imagem
+        async function sendImage(file) {
             if (file && currentUser) {
+                const storagePath = `uploads/${Date.now()}-${file.name}`;
+                const imageRef = storageRef(storage, storagePath);
+
+                await uploadBytes(imageRef, file);
+                const downloadURL = await getDownloadURL(imageRef);
+
                 const chatRef = ref(database, 'chat');
                 push(chatRef, {
                     name: currentUser.name,
-                    content: `[Arquivo: ${file.name}]`,
-                    verified: currentUser.verified,
-                    ceo: currentUser.ceo,
+                    content: `<img src="${downloadURL}" alt="Enviado" class="max-w-full"/>`,
+                    verified: currentUser.verified || false,
+                    ceo: currentUser.ceo || false,
                     timestamp: Date.now()
                 });
             }
         }
 
-        // Delete a message
-        function deleteMessage(key) {
-            const messageRef = ref(database, `chat/${key}`);
-            update(messageRef, { deleted: true });
+        // Arquivo selecionado
+        function handleFileInput(event) {
+            const file = event.target.files[0];
+            sendImage(file);
         }
 
         window.sendMessage = sendMessage;
-        window.handleFileSelect = handleFileSelect;
+        window.handleFileInput = handleFileInput;
         window.initializeChat = initializeChat;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            initializeChat();
-        });
+        document.addEventListener("DOMContentLoaded", initializeChat);
     </script>
 </head>
 <body class="bg-gray-100">
     <div class="flex flex-col h-screen">
-        <!-- Header -->
-        <header class="bg-green-600 text-white p-4 flex items-center justify-center">
-            <h1 class="text-xl font-bold">CHAT DA FAMÍLIA</h1>
+        <header class="bg-green-600 text-white p-4 text-center font-bold text-xl">
+            Chat Real-time
         </header>
-        <!-- Chat List -->
-        <div class="flex-1 overflow-y-auto" id="chat-list"></div>
-        <!-- Message Input -->
-        <div class="bg-white p-4 flex items-center border-t relative">
-            <input class="flex-1 border rounded-full px-4 py-2" id="message-input" placeholder="Digite uma mensagem..." type="text"/>
-            <button class="ml-4 text-green-600" onclick="sendMessage()">
-                <i class="fas fa-paper-plane text-2xl"></i>
+        <div id="chat-list" class="flex-1 overflow-y-auto p-4 bg-white"></div>
+        <div class="p-4 flex items-center bg-gray-200 border-t">
+            <input id="message-input" type="text" placeholder="Digite uma mensagem..." class="flex-1 p-2 rounded-full border"/>
+            <input id="file-input" type="file" class="hidden" onchange="handleFileInput(event)"/>
+            <button onclick="document.getElementById('file-input').click()" class="ml-4 text-green-600">
+                <i class="fas fa-paperclip"></i>
+            </button>
+            <button onclick="sendMessage()" class="ml-4 text-green-600">
+                <i class="fas fa-paper-plane"></i>
             </button>
         </div>
     </div>
