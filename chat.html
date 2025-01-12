@@ -10,11 +10,8 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-        }
-        @media (min-width: 640px) {
-            body {
-                display: none;
-            }
+            height: 100vh;
+            overflow: hidden;
         }
         .dropdown-menu {
             display: none;
@@ -44,6 +41,7 @@
             max-height: calc(100vh - 120px);
             overflow-y: auto;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
         .message-image {
             max-width: 200px;
@@ -173,106 +171,12 @@
 
         let currentUser = null;
         let currentUserData = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingInterval;
+        let recordingTime = 0;
 
-        // Check authentication state
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                
-                try {
-                    // Get user data
-                    const userRef = ref(db, `users/${user.uid}`);
-                    const userSnapshot = await get(userRef);
-                    currentUserData = userSnapshot.val();
-
-                    if (currentUserData?.banned) {
-                        window.location.href = 'banido.html';
-                        return;
-                    }
-
-                    // Set user name in header
-                    document.getElementById('user-name').textContent = 
-                        `${currentUserData.firstName} ${currentUserData.lastName}`;
-
-                    // Initialize chat
-                    await initializeChat();
-                } catch (error) {
-                    console.error('Error initializing user:', error);
-                    alert('Erro ao inicializar usuário. Tente novamente.');
-                }
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-
-        // Initialize chat functionality
-        async function initializeChat() {
-            const chatRef = ref(db, 'chat');
-            const chatList = document.getElementById('chat-list');
-            let isFirstLoad = true;
-
-            try {
-                // Check if chat node exists, if not create it
-                const chatSnapshot = await get(chatRef);
-                if (!chatSnapshot.exists()) {
-                    await set(chatRef, {
-                        initialized: {
-                            message: "Chat initialized",
-                            timestamp: Date.now(),
-                            userId: "system"
-                        }
-                    });
-                }
-
-                // Listen for chat messages
-                onValue(chatRef, async (snapshot) => {
-                    const messages = snapshot.val();
-                    const tempMessages = [];
-
-                    if (messages) {
-                        for (const [key, message] of Object.entries(messages)) {
-                            if (key === 'initialized') continue; // Skip initialization message
-                            
-                            try {
-                                const userSnapshot = await get(ref(db, `users/${message.userId}`));
-                                const userData = userSnapshot.val();
-                                
-                                if (userData) {
-                                    tempMessages.push({
-                                        key,
-                                        message,
-                                        userData
-                                    });
-                                }
-                            } catch (error) {
-                                console.error('Error fetching user data:', error);
-                            }
-                        }
-
-                        // Sort messages by timestamp
-                        tempMessages.sort((a, b) => a.message.timestamp - b.message.timestamp);
-
-                        chatList.innerHTML = '';
-                        tempMessages.forEach(({message, key, userData}) => {
-                            const messageElement = createMessageElement(message, key, userData);
-                            chatList.appendChild(messageElement);
-                        });
-
-                        // Scroll to bottom only on first load or if user is at bottom
-                        if (isFirstLoad || 
-                            chatList.scrollTop + chatList.clientHeight >= chatList.scrollHeight - 100) {
-                            chatList.scrollTop = chatList.scrollHeight;
-                        }
-                        isFirstLoad = false;
-                    }
-                });
-            } catch (error) {
-                console.error('Error initializing chat:', error);
-                alert('Erro ao inicializar chat. Tente novamente.');
-            }
-        }
-
-        // Message sending function
+        // Make functions available globally
         window.sendMessage = async () => {
             const messageInput = document.getElementById('message-input');
             const message = messageInput.value.trim();
@@ -284,22 +188,8 @@
             try {
                 showLoading();
                 
-                // Check if chat node exists again before sending
                 const chatRef = ref(db, 'chat');
-                const chatSnapshot = await get(chatRef);
-                
-                if (!chatSnapshot.exists()) {
-                    await set(chatRef, {
-                        initialized: {
-                            message: "Chat initialized",
-                            timestamp: Date.now(),
-                            userId: "system"
-                        }
-                    });
-                }
-
-                // Create new message
-                const newMessageRef = push(ref(db, 'chat'));
+                const newMessageRef = push(chatRef);
                 await set(newMessageRef, {
                     userId: currentUser.uid,
                     message: message,
@@ -316,7 +206,6 @@
             }
         };
 
-        // File handling function
         window.handleFileSelect = async (input, type) => {
             const file = input.files[0];
             if (file && currentUser && currentUserData) {
@@ -341,12 +230,6 @@
                 }
             }
         };
-
-        // Audio recording variables and functions
-        let mediaRecorder;
-        let audioChunks = [];
-        let recordingInterval;
-        let recordingTime = 0;
 
         window.startRecording = async () => {
             try {
@@ -392,11 +275,31 @@
             }
         };
 
-        mediaRecorder.stop();
+        window.stopRecording = () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
                 stopRecordingTimer();
                 document.getElementById('recording-controls').classList.add('hidden');
                 document.getElementById('microphone-button').classList.remove('hidden');
+            }
+        };
+
+        window.toggleDropdown = () => {
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            dropdownMenu.style.display = 
+                dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '' 
+                    ? 'block' 
+                    : 'none';
+        };
+
+        window.signOut = async () => {
+            try {
+                await firebaseSignOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Erro ao sair. Tente novamente.');
             }
         };
 
@@ -416,12 +319,65 @@
             document.getElementById('recording-timer').textContent = '00:00';
         }
 
-        // Create message element function
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Initialize chat functionality
+        async function initializeChat() {
+            const chatRef = ref(db, 'chat');
+            const chatList = document.getElementById('chat-list');
+            let isFirstLoad = true;
+
+            onValue(chatRef, async (snapshot) => {
+                const messages = snapshot.val();
+                const tempMessages = [];
+
+                if (messages) {
+                    for (const [key, message] of Object.entries(messages)) {
+                        if (key === 'initialized') continue;
+                        
+                        try {
+                            const userSnapshot = await get(ref(db, `users/${message.userId}`));
+                            const userData = userSnapshot.val();
+                            
+                            if (userData) {
+                                tempMessages.push({
+                                    key,
+                                    message,
+                                    userData
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error fetching user data:', error);
+                        }
+                    }
+
+                    tempMessages.sort((a, b) => a.message.timestamp - b.message.timestamp);
+
+                    chatList.innerHTML = '';
+                    tempMessages.forEach(({message, key, userData}) => {
+                        const messageElement = createMessageElement(message, key, userData);
+                        chatList.appendChild(messageElement);
+                    });
+
+                    if (isFirstLoad || 
+                        chatList.scrollTop + chatList.clientHeight >= chatList.scrollHeight - 100) {
+                        chatList.scrollTop = chatList.scrollHeight;
+                    }
+                    isFirstLoad = false;
+                }
+            });
+        }
+
         function createMessageElement(message, key, userData) {
             const div = document.createElement('div');
             div.className = 'bg-white p-4 flex items-center border-b';
 
-            // Create user avatar
             const initial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '?';
             const avatar = document.createElement('div');
             avatar.className = 'user-avatar';
@@ -458,7 +414,7 @@
                 messageContent.innerHTML = '<em>Esta mensagem foi apagada por um administrador</em>';
             } else if (message.image) {
                 messageContent.innerHTML = `
-                    <img src="${message.image}" class="message-image" alt="Imagem" />
+                    <img src="${message.image}" class="message-image cursor-pointer" alt="Imagem" onclick="window.open('${message.image}', '_blank')" />
                 `;
             } else if (message.audio) {
                 messageContent.innerHTML = `
@@ -490,7 +446,6 @@
             return div;
         }
 
-        // Message deletion function
         async function deleteMessage(messageId) {
             if (confirm('Tem certeza que deseja apagar esta mensagem?')) {
                 try {
@@ -506,45 +461,38 @@
             }
         }
 
-        // Add error handling for database connection
-        const dbRef = ref(db, '.info/connected');
-        onValue(dbRef, (snap) => {
-            if (!snap.val()) {
-                console.log('Lost connection to database');
-                alert('Conexão perdida. Tentando reconectar...');
+        // Check authentication state
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                try {
+                    // Get user data
+                    const userRef = ref(db, `users/${user.uid}`);
+                    const userSnapshot = await get(userRef);
+                    currentUserData = userSnapshot.val();
+
+                    if (currentUserData?.banned) {
+                        window.location.href = 'banido.html';
+                        return;
+                    }
+
+                    // Set user name in header
+                    document.getElementById('user-name').textContent = 
+                        `${currentUserData.firstName} ${currentUserData.lastName}`;
+
+                    // Initialize chat
+                    await initializeChat();
+                } catch (error) {
+                    console.error('Error initializing user:', error);
+                    alert('Erro ao inicializar usuário. Tente novamente.');
+                }
+            } else {
+                window.location.href = 'login.html';
             }
         });
 
-        // Utility functions
-        function showLoading() {
-            document.getElementById('loading').style.display = 'flex';
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        // Dropdown toggle function
-        window.toggleDropdown = () => {
-            const dropdownMenu = document.getElementById('dropdown-menu');
-            dropdownMenu.style.display = 
-                dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '' 
-                    ? 'block' 
-                    : 'none';
-        };
-
-        // Sign out function
-        window.signOut = async () => {
-            try {
-                await firebaseSignOut(auth);
-                window.location.href = 'login.html';
-            } catch (error) {
-                console.error('Error signing out:', error);
-                alert('Erro ao sair. Tente novamente.');
-            }
-        };
-
-        // Close dropdown when clicking outside
+        // Add event listeners
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('dropdown-menu');
             const dropdownButton = document.querySelector('.fa-plus').parentElement;
@@ -554,12 +502,33 @@
             }
         });
 
-        // Handle Enter key in message input
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 sendMessage();
             }
         });
+
+        // Add error handling for database connection
+        const connectedRef = ref(db, '.info/connected');
+        onValue(connectedRef, (snap) => {
+            if (!snap.val()) {
+                console.log('Lost connection to database');
+                alert('Conexão perdida. Tentando reconectar...');
+            }
+        });
+
+        // Enable WebView optimization
+        if (window.navigator.userAgent.includes('wv')) {
+            document.documentElement.style.webkitTouchCallout = 'none';
+            document.documentElement.style.webkitUserSelect = 'none';
+            
+            // Prevent zoom on input focus for iOS
+            const meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+        }
     </script>
 </body>
 </html>
