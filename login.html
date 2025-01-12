@@ -29,7 +29,7 @@
      <h2 class="text-2xl font-semibold mb-6 text-center">
       Bem-vindo de volta!
      </h2>
-     <form onsubmit="return validateForm()">
+     <form id="login-form">
       <div class="space-y-6">
        <div>
         <label class="block text-gray-700 font-medium mb-2">
@@ -50,11 +50,11 @@
           Lembrar-me
          </label>
         </div>
-        <a class="text-blue-600 hover:underline" href="#">
+        <a class="text-blue-600 hover:underline" href="#" id="forgot-password-link">
          Esqueceu a senha?
         </a>
        </div>
-       <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">
+       <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold" type="submit">
         Entrar
        </button>
       </div>
@@ -68,18 +68,111 @@
     </div>
    </div>
   </div>
-  <script>
-   function validateForm() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        if (!email || !password) {
-            alert('Todos os campos são obrigatórios.');
-            return false;
-        }
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+      authDomain: "kelvinchat-f9499.firebaseapp.com",
+      databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+      projectId: "kelvinchat-f9499",
+      storageBucket: "kelvinchat-f9499.firebasestorage.app",
+      messagingSenderId: "972962322611",
+      appId: "1:972962322611:web:ff5416bb049abea350f8c6",
+      measurementId: "G-K99GCK98ZR"
+    };
 
-        return true;
-    }
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth();
+
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        alert('Por favor, preencha todos os campos antes de continuar.');
+        return;
+      }
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          alert('Login realizado com sucesso!');
+          // Redirecionar para a página de chat
+          window.location.href = "https://ktechnologya.github.io/kvncht/chat.html";
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          let errorMessage = '';
+
+          switch (errorCode) {
+            case 'auth/user-not-found':
+              errorMessage = 'Não encontramos nenhuma conta associada a este e-mail. Verifique se o e-mail foi digitado corretamente ou crie uma nova conta.';
+              break;
+            case 'auth/wrong-password':
+              errorMessage = 'A senha informada está incorreta. Por favor, verifique e tente novamente. Se esqueceu sua senha, clique em "Esqueci minha senha".';
+              break;
+            case 'auth/invalid-email':
+            case 'auth/invalid-password':
+              errorMessage = 'E-mail ou senha inválidos. Verifique suas credenciais e tente novamente.';
+              break;
+            case 'auth/user-disabled':
+              errorMessage = 'Sua conta foi desativada. Se você acha que isso é um erro, entre em contato com o suporte.';
+              break;
+            case 'auth/network-request-failed':
+              errorMessage = 'Parece que houve um problema com a sua conexão à internet. Verifique sua conexão e tente novamente.';
+              break;
+            default:
+              errorMessage = 'Ocorreu um erro ao tentar fazer login. Tente novamente mais tarde. Se o problema persistir, entre em contato com o suporte.';
+          }
+
+          alert(`Erro: ${errorMessage}`);
+        });
+    });
+
+    document.getElementById('forgot-password-link').addEventListener('click', function(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+
+      if (!email) {
+        alert('Por favor, insira seu e-mail para redefinir a senha.');
+        return;
+      }
+
+      sendPasswordResetEmail(auth, email)
+        .then(() => {
+          alert('Um e-mail para redefinição de senha foi enviado. Verifique sua caixa de entrada.');
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          let errorMessage = '';
+
+          switch (errorCode) {
+            case 'auth/user-not-found':
+              errorMessage = 'Não encontramos nenhuma conta associada a este e-mail. Verifique se o e-mail foi digitado corretamente ou crie uma nova conta.';
+              break;
+            case 'auth/invalid-email':
+              errorMessage = 'O endereço de e-mail fornecido não é válido. Por favor, insira um e-mail válido e tente novamente.';
+              break;
+            case 'auth/network-request-failed':
+              errorMessage = 'Parece que houve um problema com a sua conexão à internet. Verifique sua conexão e tente novamente.';
+              break;
+            default:
+              errorMessage = 'Ocorreu um erro ao tentar redefinir a senha. Tente novamente mais tarde. Se o problema persistir, entre em contato com o suporte.';
+          }
+
+          alert(`Erro: ${errorMessage}`);
+        });
+    });
   </script>
  </body>
 </html>
