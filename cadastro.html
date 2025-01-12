@@ -24,7 +24,7 @@
    <!-- Registration Form -->
    <div class="flex-1 overflow-y-auto p-4 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
-     <form id="registrationForm" onsubmit="return validateForm()">
+     <form id="registrationForm" onsubmit="return validateForm(event)">
       <div class="space-y-4">
        <div class="flex items-center">
         <img alt="Imagem de perfil do usuário" class="rounded-full w-24 h-24" id="profile-image-preview" src="https://placehold.co/100x100"/>
@@ -115,7 +115,9 @@
         reader.readAsDataURL(event.target.files[0]);
     }
 
-    function validateForm() {
+    function validateForm(event) {
+        event.preventDefault();  // Impede o envio do formulário e garante que o código JS seja executado
+        
         const profileImage = document.getElementById('profile-image');
         const terms = document.getElementById('terms');
         
