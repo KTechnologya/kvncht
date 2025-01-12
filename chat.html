@@ -49,6 +49,7 @@
             max-width: 200px;
             max-height: 200px;
             object-fit: contain;
+            border-radius: 8px;
         }
         .user-avatar {
             width: 40px;
@@ -61,15 +62,46 @@
             color: white;
             font-weight: bold;
         }
+        .audio-message {
+            max-width: 300px;
+            width: 100%;
+        }
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex flex-col h-screen">
         <header class="bg-green-600 text-white p-4 flex items-center justify-between">
             <h1 class="text-xl font-bold">CHAT DA FAMÍLIA</h1>
-            <button onclick="signOut()" class="text-white">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
+            <div class="flex items-center">
+                <span id="user-name" class="mr-4"></span>
+                <button onclick="signOut()" class="text-white">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
         </header>
 
         <div class="flex-1 overflow-y-auto chat-container" id="chat-list"></div>
@@ -83,11 +115,13 @@
                     <i class="fas fa-user"></i>
                     Meu perfil
                 </a>
-                <a href="#" onclick="openCamera()">
+                <input type="file" accept="image/*" capture="camera" id="camera-input" class="hidden" onchange="handleFileSelect(this, 'image')"/>
+                <a href="#" onclick="document.getElementById('camera-input').click()">
                     <i class="fas fa-camera"></i>
                     Enviar foto
                 </a>
-                <a href="#" onclick="openGallery()">
+                <input type="file" accept="image/*" id="gallery-input" class="hidden" onchange="handleFileSelect(this, 'image')"/>
+                <a href="#" onclick="document.getElementById('gallery-input').click()">
                     <i class="fas fa-images"></i>
                     Enviar imagens
                 </a>
@@ -101,19 +135,23 @@
                     <i class="fas fa-stop text-2xl"></i>
                 </button>
             </div>
-            <input class="flex-1 border rounded-full px-4 py-2" id="message-input" placeholder="Digite uma mensagem..." type="text"/>
+            <input class="flex-1 border rounded-full px-4 py-2" id="message-input" placeholder="Digite uma mensagem..." type="text" onkeypress="if(event.key === 'Enter') sendMessage()"/>
             <button class="ml-4 text-green-600" onclick="sendMessage()">
                 <i class="fas fa-paper-plane text-2xl"></i>
             </button>
         </div>
     </div>
 
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
     <!-- Firebase Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, push, set, remove, get } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -134,84 +172,130 @@
         const db = getDatabase(app);
         const storage = getStorage(app);
 
+        let currentUser = null;
+        let currentUserData = null;
+
         // Check authentication state
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Check if user is banned
+                currentUser = user;
+                
+                // Get user data
                 const userRef = ref(db, `users/${user.uid}`);
-                onValue(userRef, (snapshot) => {
-                    const userData = snapshot.val();
-                    if (userData && userData.banned) {
-                        window.location.href = 'banido.html';
-                    }
-                });
+                const userSnapshot = await get(userRef);
+                currentUserData = userSnapshot.val();
+
+                if (currentUserData?.banned) {
+                    window.location.href = 'banido.html';
+                    return;
+                }
+
+                // Set user name in header
+                document.getElementById('user-name').textContent = 
+                    `${currentUserData.firstName} ${currentUserData.lastName}`;
 
                 // Initialize chat
-                initializeChat(user);
+                initializeChat();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
         // Initialize chat functionality
-        function initializeChat(user) {
+        function initializeChat() {
             const chatRef = ref(db, 'chat');
             const chatList = document.getElementById('chat-list');
+            let isFirstLoad = true;
 
             // Listen for chat messages
-            onValue(chatRef, (snapshot) => {
+            onValue(chatRef, async (snapshot) => {
                 const messages = snapshot.val();
-                chatList.innerHTML = '';
+                const tempMessages = [];
 
                 if (messages) {
-                    Object.entries(messages).forEach(([key, message]) => {
-                        const messageElement = createMessageElement(message, key, user.uid);
+                    for (const [key, message] of Object.entries(messages)) {
+                        const userSnapshot = await get(ref(db, `users/${message.userId}`));
+                        const userData = userSnapshot.val();
+                        
+                        if (userData) {
+                            tempMessages.push({
+                                key,
+                                message,
+                                userData
+                            });
+                        }
+                    }
+
+                    // Sort messages by timestamp
+                    tempMessages.sort((a, b) => a.message.timestamp - b.message.timestamp);
+
+                    chatList.innerHTML = '';
+                    tempMessages.forEach(({message, key, userData}) => {
+                        const messageElement = createMessageElement(message, key, userData);
                         chatList.appendChild(messageElement);
                     });
 
-                    // Auto scroll to bottom
-                    chatList.scrollTop = chatList.scrollHeight;
+                    // Scroll to bottom only on first load or if user is at bottom
+                    if (isFirstLoad || 
+                        chatList.scrollTop + chatList.clientHeight >= chatList.scrollHeight - 100) {
+                        chatList.scrollTop = chatList.scrollHeight;
+                    }
+                    isFirstLoad = false;
                 }
             });
+        }
 
-            // Send message function
-            window.sendMessage = async () => {
-                const messageInput = document.getElementById('message-input');
-                const message = messageInput.value.trim();
+        // Message sending function
+        window.sendMessage = async () => {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
 
-                if (message) {
-                    const newMessageRef = push(ref(db, 'chat'));
-                    await set(newMessageRef, {
-                        userId: user.uid,
-                        name: user.displayName,
-                        message: message,
-                        timestamp: Date.now()
-                    });
-
-                    messageInput.value = '';
-                }
-            };
-
-            // File upload functions
-            window.handleFileUpload = async (file, type) => {
-                const fileRef = storageRef(storage, `${type}/${Date.now()}_${file.name}`);
-                await uploadBytes(fileRef, file);
-                const downloadURL = await getDownloadURL(fileRef);
-
+            if (message && currentUser && currentUserData) {
                 const newMessageRef = push(ref(db, 'chat'));
                 await set(newMessageRef, {
-                    userId: user.uid,
-                    name: user.displayName,
-                    [type]: downloadURL,
+                    userId: currentUser.uid,
+                    message: message,
                     timestamp: Date.now()
                 });
-            };
 
-            // Audio recording functions
-            let mediaRecorder;
-            let audioChunks = [];
+                messageInput.value = '';
+            }
+        };
 
-            window.startRecording = async () => {
+        // File handling function
+        window.handleFileSelect = async (input, type) => {
+            const file = input.files[0];
+            if (file && currentUser && currentUserData) {
+                showLoading();
+                try {
+                    const fileRef = storageRef(storage, `${type}/${Date.now()}_${file.name}`);
+                    await uploadBytes(fileRef, file);
+                    const downloadURL = await getDownloadURL(fileRef);
+
+                    const newMessageRef = push(ref(db, 'chat'));
+                    await set(newMessageRef, {
+                        userId: currentUser.uid,
+                        [type]: downloadURL,
+                        timestamp: Date.now()
+                    });
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                    alert('Erro ao enviar arquivo. Tente novamente.');
+                } finally {
+                    hideLoading();
+                    input.value = '';
+                }
+            }
+        };
+
+        // Audio recording variables and functions
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordingInterval;
+        let recordingTime = 0;
+
+        window.startRecording = async () => {
+            try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
@@ -221,32 +305,72 @@
                 };
 
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const file = new File([audioBlob], 'audio.wav', { type: 'audio/wav' });
-                    await handleFileUpload(file, 'audio');
+                    showLoading();
+                    try {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const file = new File([audioBlob], 'audio.wav', { type: 'audio/wav' });
+                        
+                        const fileRef = storageRef(storage, `audio/${Date.now()}_audio.wav`);
+                        await uploadBytes(fileRef, file);
+                        const downloadURL = await getDownloadURL(fileRef);
+
+                        const newMessageRef = push(ref(db, 'chat'));
+                        await set(newMessageRef, {
+                            userId: currentUser.uid,
+                            audio: downloadURL,
+                            timestamp: Date.now()
+                        });
+                    } catch (error) {
+                        console.error('Error uploading audio:', error);
+                        alert('Erro ao enviar áudio. Tente novamente.');
+                    } finally {
+                        hideLoading();
+                    }
                 };
 
                 mediaRecorder.start();
+                startRecordingTimer();
                 document.getElementById('recording-controls').classList.remove('hidden');
                 document.getElementById('microphone-button').classList.add('hidden');
-            };
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('Erro ao acessar microfone. Verifique as permissões.');
+            }
+        };
 
-            window.stopRecording = () => {
-                if (mediaRecorder) {
-                    mediaRecorder.stop();
-                    document.getElementById('recording-controls').classList.add('hidden');
-                    document.getElementById('microphone-button').classList.remove('hidden');
-                }
-            };
+        window.stopRecording = () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                stopRecordingTimer();
+                document.getElementById('recording-controls').classList.add('hidden');
+                document.getElementById('microphone-button').classList.remove('hidden');
+            }
+        };
+
+        function startRecordingTimer() {
+            recordingTime = 0;
+            recordingInterval = setInterval(() => {
+                recordingTime++;
+                const minutes = Math.floor(recordingTime / 60);
+                const seconds = recordingTime % 60;
+                document.getElementById('recording-timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopRecordingTimer() {
+            clearInterval(recordingInterval);
+            document.getElementById('recording-timer').textContent = '00:00';
         }
 
         // Create message element function
-        function createMessageElement(message, key, currentUserId) {
+        function createMessageElement(message, key, userData) {
             const div = document.createElement('div');
             div.className = 'bg-white p-4 flex items-center border-b';
 
-            // Create user avatar with initial
-            const initial = message.name ? message.name.charAt(0).toUpperCase() : '?';
+            // Create user avatar
+            const initial = userData.firstName ? userData.firstName.charAt(0).toUpperCase() : '?';
             const avatar = document.createElement('div');
             avatar.className = 'user-avatar';
             avatar.textContent = initial;
@@ -259,48 +383,123 @@
             
             const userInfo = document.createElement('div');
             userInfo.className = 'flex items-center';
-            userInfo.innerHTML = `
-                <h2 class="text-lg font-semibold">${message.name}</h2>
-                ${message.verified ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" class="ml-2 w-4 h-4" alt="Verificado"/>` : ''}
-                ${message.ceo ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png" class="ml-2 w-4 h-4" alt="CEO"/>` : ''}
-            `;
+            
+            const fullName = `${userData.firstName} ${userData.lastName}`;
+            
+                userInfo.innerHTML = `
+                    <h2 class="text-lg font-semibold">${fullName}</h2>
+                    ${userData.verified ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" class="ml-2 w-4 h-4" alt="Verificado"/>` : ''}
+                    ${userData.ceo ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png" class="ml-2 w-4 h-4" alt="CEO"/>` : ''}
+                `;
 
-            const timestamp = document.createElement('span');
-            timestamp.className = 'text-sm text-gray-500';
-            timestamp.textContent = new Date(message.timestamp).toLocaleTimeString();
+                const timestamp = document.createElement('span');
+                timestamp.className = 'text-sm text-gray-500';
+                timestamp.textContent = new Date(message.timestamp).toLocaleTimeString();
 
-            header.appendChild(userInfo);
-            header.appendChild(timestamp);
+                header.appendChild(userInfo);
+                header.appendChild(timestamp);
 
-            const messageContent = document.createElement('div');
-            messageContent.className = 'text-gray-600 mt-1';
+                const messageContent = document.createElement('div');
+                messageContent.className = 'text-gray-600 mt-1';
 
-            if (message.deleted) {
-                messageContent.innerHTML = '<em>Esta mensagem foi apagada por um administrador</em>';
-            } else if (message.image) {
-                messageContent.innerHTML = `<img src="${message.image}" class="message-image" alt="Imagem"/>`;
-            } else if (message.audio) {
-                messageContent.innerHTML = `<audio controls src="${message.audio}"></audio>`;
-            } else {
-                messageContent.textContent = message.message;
+                if (message.deleted) {
+                    messageContent.innerHTML = '<em>Esta mensagem foi apagada por um administrador</em>';
+                } else if (message.image) {
+                    messageContent.innerHTML = `
+                        <img src="${message.image}" class="message-image" alt="Imagem" />
+                    `;
+                } else if (message.audio) {
+                    messageContent.innerHTML = `
+                        <audio controls src="${message.audio}" class="audio-message"></audio>
+                    `;
+                } else if (message.banned) {
+                    messageContent.innerHTML = `
+                        <em>${fullName} foi banido por um administrador. Motivo: ${userData.reason || 'Não especificado'}</em>
+                    `;
+                } else {
+                    messageContent.textContent = message.message;
+                }
+
+                // Add delete button for admins
+                if (currentUserData && (currentUserData.ceo || currentUserData.admin) && !message.deleted) {
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'text-red-500 text-sm ml-2';
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.onclick = () => deleteMessage(key);
+                    messageContent.appendChild(deleteButton);
+                }
+
+                content.appendChild(header);
+                content.appendChild(messageContent);
+
+                div.appendChild(avatar);
+                div.appendChild(content);
+
+                return div;
             }
 
-            content.appendChild(header);
-            content.appendChild(messageContent);
+            // Message deletion function
+            async function deleteMessage(messageId) {
+                if (confirm('Tem certeza que deseja apagar esta mensagem?')) {
+                    try {
+                        const messageRef = ref(db, `chat/${messageId}`);
+                        await set(messageRef, {
+                            deleted: true,
+                            timestamp: Date.now()
+                        });
+                    } catch (error) {
+                        console.error('Error deleting message:', error);
+                        alert('Erro ao apagar mensagem. Tente novamente.');
+                    }
+                }
+            }
 
-            div.appendChild(avatar);
-            div.appendChild(content);
+            // Utility functions
+            function showLoading() {
+                document.getElementById('loading').style.display = 'flex';
+            }
 
-            return div;
-        }
+            function hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+            }
 
-        // Sign out function
-        window.signOut = () => {
-            signOut(auth).then(() => {
-                window.location.href = 'login.html';
+            // Dropdown toggle function
+            window.toggleDropdown = () => {
+                const dropdownMenu = document.getElementById('dropdown-menu');
+                dropdownMenu.style.display = 
+                    dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '' 
+                        ? 'block' 
+                        : 'none';
+            };
+
+            // Sign out function
+            window.signOut = async () => {
+                try {
+                    await firebaseSignOut(auth);
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                    alert('Erro ao sair. Tente novamente.');
+                }
+            };
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                const dropdown = document.getElementById('dropdown-menu');
+                const dropdownButton = document.querySelector('.fa-plus').parentElement;
+                
+                if (!dropdown.contains(e.target) && !dropdownButton.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
             });
-        };
 
+            // Handle Enter key in message input
+            document.getElementById('message-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
     </script>
 </body>
 </html>
