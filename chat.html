@@ -1,7 +1,7 @@
 <html lang="pt-BR">
  <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport"/>
   <title>
    Chat UI
   </title>
@@ -325,6 +325,17 @@
    </div>
    <div class="messages">
     <div class="messages-content">
+     <div class="message new">
+      <div class="avatar">
+       <img alt="Avatar do usuário" src="https://placehold.co/30x30"/>
+      </div>
+      <div class="message-content">
+       <strong>
+        Fabio:
+       </strong>
+       Prazer em te conhecer
+      </div>
+     </div>
     </div>
    </div>
    <div class="message-box">
@@ -436,7 +447,7 @@
 
             setTimeout(function() {
                 $('.message.loading').remove();
-                $('<div class="message new">' + Fake[i] + '</div>').appendTo($('.messages-content')).addClass('new');
+                $('<div class="message new"><div class="avatar"><img src="https://placehold.co/30x30" alt="Avatar do usuário"></div><div class="message-content"><strong>Fabio:</strong> ' + Fake[i] + '</div></div>').appendTo($('.messages-content')).addClass('new');
                 setDate();
                 updateScrollbar();
                 i++;
