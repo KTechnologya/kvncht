@@ -133,7 +133,7 @@
       const confirmPassword = document.getElementById('confirm-password').value;
 
       if (password !== confirmPassword) {
-        alert('As senhas não coincidem.');
+        alert('As senhas inseridas não coincidem. Por favor, verifique e insira as senhas corretamente.');
         return;
       }
 
@@ -162,7 +162,25 @@
         })
         .catch((error) => {
           const errorCode = error.code;
-          const errorMessage = error.message;
+          let errorMessage = '';
+
+          switch (errorCode) {
+            case 'auth/email-already-in-use':
+              errorMessage = 'O e-mail fornecido já está cadastrado em nossa plataforma. Por favor, utilize um e-mail diferente ou faça login na sua conta existente.';
+              break;
+            case 'auth/invalid-email':
+              errorMessage = 'O endereço de e-mail fornecido não é válido. Por favor, insira um e-mail válido e tente novamente.';
+              break;
+            case 'auth/weak-password':
+              errorMessage = 'A senha fornecida é inválida. Certifique-se de que sua senha tenha pelo menos 6 caracteres e tente novamente.';
+              break;
+            case 'auth/network-request-failed':
+              errorMessage = 'Houve um problema ao se conectar ao servidor. Verifique sua conexão com a internet e tente novamente.';
+              break;
+            default:
+              errorMessage = 'Ocorreu um erro inesperado. Tente novamente mais tarde. Se o problema persistir, entre em contato com o suporte.';
+          }
+
           alert(`Erro: ${errorMessage}`);
         });
     });
