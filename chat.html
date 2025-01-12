@@ -1,169 +1,306 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Real-time</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Chat da Família</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        @media (min-width: 640px) {
+            body {
+                display: none;
+            }
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            bottom: 60px;
+            left: 10px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: black;
+        }
+        .dropdown-menu a:hover {
+            background-color: #f0f0f0;
+        }
+        .dropdown-menu i {
+            margin-right: 10px;
+        }
+        .chat-container {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        .message-image {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex flex-col h-screen">
+        <header class="bg-green-600 text-white p-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold">CHAT DA FAMÍLIA</h1>
+            <button onclick="signOut()" class="text-white">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto chat-container" id="chat-list"></div>
+
+        <div class="bg-white p-4 flex items-center border-t relative">
+            <button class="text-green-600 mr-4" onclick="toggleDropdown()">
+                <i class="fas fa-plus text-2xl"></i>
+            </button>
+            <div class="dropdown-menu" id="dropdown-menu">
+                <a href="perfil.html">
+                    <i class="fas fa-user"></i>
+                    Meu perfil
+                </a>
+                <a href="#" onclick="openCamera()">
+                    <i class="fas fa-camera"></i>
+                    Enviar foto
+                </a>
+                <a href="#" onclick="openGallery()">
+                    <i class="fas fa-images"></i>
+                    Enviar imagens
+                </a>
+            </div>
+            <button class="text-green-600 mr-4" id="microphone-button" onclick="startRecording()">
+                <i class="fas fa-microphone text-2xl"></i>
+            </button>
+            <div class="hidden flex items-center" id="recording-controls">
+                <span class="text-red-600 mr-2" id="recording-timer">00:00</span>
+                <button class="text-red-600" onclick="stopRecording()">
+                    <i class="fas fa-stop text-2xl"></i>
+                </button>
+            </div>
+            <input class="flex-1 border rounded-full px-4 py-2" id="message-input" placeholder="Digite uma mensagem..." type="text"/>
+            <button class="ml-4 text-green-600" onclick="sendMessage()">
+                <i class="fas fa-paper-plane text-2xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
     <script type="module">
-        // Importações Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getDatabase, ref, push, onValue, update, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, push, set, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js";
 
-        // Configuração Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
             authDomain: "kelvinchat-f9499.firebaseapp.com",
             databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
             projectId: "kelvinchat-f9499",
-            storageBucket: "kelvinchat-f9499.appspot.com",
+            storageBucket: "kelvinchat-f9499.firebasestorage.app",
             messagingSenderId: "972962322611",
             appId: "1:972962322611:web:ff5416bb049abea350f8c6",
             measurementId: "G-K99GCK98ZR"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
-        const database = getDatabase(app);
+        const db = getDatabase(app);
         const storage = getStorage(app);
 
-        let currentUser = null;
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Check if user is banned
+                const userRef = ref(db, `users/${user.uid}`);
+                onValue(userRef, (snapshot) => {
+                    const userData = snapshot.val();
+                    if (userData && userData.banned) {
+                        window.location.href = 'banido.html';
+                    }
+                });
 
-        // Inicializar o chat
-        function initializeChat() {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    const userRef = ref(database, `users/${user.uid}`);
-                    onValue(userRef, (snapshot) => {
-                        const userData = snapshot.val();
-                        if (userData && userData.banned) {
-                            window.location.href = "banido.html";
-                        } else {
-                            currentUser = { uid: user.uid, ...userData };
-                            loadChatMessages();
-                        }
-                    });
-                } else {
-                    window.location.href = "login.html";
-                }
-            });
-        }
+                // Initialize chat
+                initializeChat(user);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
 
-        // Carregar mensagens do chat
-        function loadChatMessages() {
-            const chatRef = ref(database, 'chat');
+        // Initialize chat functionality
+        function initializeChat(user) {
+            const chatRef = ref(db, 'chat');
             const chatList = document.getElementById('chat-list');
 
+            // Listen for chat messages
             onValue(chatRef, (snapshot) => {
+                const messages = snapshot.val();
                 chatList.innerHTML = '';
-                snapshot.forEach((childSnapshot) => {
-                    const message = childSnapshot.val();
-                    const messageElement = createMessageElement(message, childSnapshot.key);
-                    chatList.appendChild(messageElement);
-                });
-                chatList.scrollTop = chatList.scrollHeight;
+
+                if (messages) {
+                    Object.entries(messages).forEach(([key, message]) => {
+                        const messageElement = createMessageElement(message, key, user.uid);
+                        chatList.appendChild(messageElement);
+                    });
+
+                    // Auto scroll to bottom
+                    chatList.scrollTop = chatList.scrollHeight;
+                }
             });
+
+            // Send message function
+            window.sendMessage = async () => {
+                const messageInput = document.getElementById('message-input');
+                const message = messageInput.value.trim();
+
+                if (message) {
+                    const newMessageRef = push(ref(db, 'chat'));
+                    await set(newMessageRef, {
+                        userId: user.uid,
+                        name: user.displayName,
+                        message: message,
+                        timestamp: Date.now()
+                    });
+
+                    messageInput.value = '';
+                }
+            };
+
+            // File upload functions
+            window.handleFileUpload = async (file, type) => {
+                const fileRef = storageRef(storage, `${type}/${Date.now()}_${file.name}`);
+                await uploadBytes(fileRef, file);
+                const downloadURL = await getDownloadURL(fileRef);
+
+                const newMessageRef = push(ref(db, 'chat'));
+                await set(newMessageRef, {
+                    userId: user.uid,
+                    name: user.displayName,
+                    [type]: downloadURL,
+                    timestamp: Date.now()
+                });
+            };
+
+            // Audio recording functions
+            let mediaRecorder;
+            let audioChunks = [];
+
+            window.startRecording = async () => {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const file = new File([audioBlob], 'audio.wav', { type: 'audio/wav' });
+                    await handleFileUpload(file, 'audio');
+                };
+
+                mediaRecorder.start();
+                document.getElementById('recording-controls').classList.remove('hidden');
+                document.getElementById('microphone-button').classList.add('hidden');
+            };
+
+            window.stopRecording = () => {
+                if (mediaRecorder) {
+                    mediaRecorder.stop();
+                    document.getElementById('recording-controls').classList.add('hidden');
+                    document.getElementById('microphone-button').classList.remove('hidden');
+                }
+            };
         }
 
-        // Criar elemento de mensagem
-        function createMessageElement(message, key) {
-            const verifiedIcon = message.verified
-                ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" class="w-4 h-4 ml-2"/>`
-                : '';
-            const ceoIcon = message.ceo
-                ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png" class="w-4 h-4 ml-2"/>`
-                : '';
-            const content = message.deleted
-                ? '<span class="italic text-gray-500">Essa mensagem foi apagada por um administrador</span>'
-                : message.content;
+        // Create message element function
+        function createMessageElement(message, key, currentUserId) {
+            const div = document.createElement('div');
+            div.className = 'bg-white p-4 flex items-center border-b';
 
-            return `
-                <div class="p-4 border-b">
-                    <div class="flex items-center">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold text-white">
-                            ${message.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="ml-3">
-                            <h2 class="text-lg font-semibold">
-                                ${message.name} ${verifiedIcon} ${ceoIcon}
-                            </h2>
-                            <p class="text-gray-600">${content}</p>
-                        </div>
-                    </div>
-                </div>
+            // Create user avatar with initial
+            const initial = message.name ? message.name.charAt(0).toUpperCase() : '?';
+            const avatar = document.createElement('div');
+            avatar.className = 'user-avatar';
+            avatar.textContent = initial;
+
+            const content = document.createElement('div');
+            content.className = 'ml-3 flex-1';
+
+            const header = document.createElement('div');
+            header.className = 'flex justify-between';
+            
+            const userInfo = document.createElement('div');
+            userInfo.className = 'flex items-center';
+            userInfo.innerHTML = `
+                <h2 class="text-lg font-semibold">${message.name}</h2>
+                ${message.verified ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" class="ml-2 w-4 h-4" alt="Verificado"/>` : ''}
+                ${message.ceo ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png" class="ml-2 w-4 h-4" alt="CEO"/>` : ''}
             `;
-        }
 
-        // Enviar mensagem
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value.trim();
+            const timestamp = document.createElement('span');
+            timestamp.className = 'text-sm text-gray-500';
+            timestamp.textContent = new Date(message.timestamp).toLocaleTimeString();
 
-            if (message && currentUser) {
-                const chatRef = ref(database, 'chat');
-                push(chatRef, {
-                    name: currentUser.name,
-                    content: message,
-                    verified: currentUser.verified || false,
-                    ceo: currentUser.ceo || false,
-                    timestamp: Date.now()
-                });
-                messageInput.value = '';
+            header.appendChild(userInfo);
+            header.appendChild(timestamp);
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'text-gray-600 mt-1';
+
+            if (message.deleted) {
+                messageContent.innerHTML = '<em>Esta mensagem foi apagada por um administrador</em>';
+            } else if (message.image) {
+                messageContent.innerHTML = `<img src="${message.image}" class="message-image" alt="Imagem"/>`;
+            } else if (message.audio) {
+                messageContent.innerHTML = `<audio controls src="${message.audio}"></audio>`;
+            } else {
+                messageContent.textContent = message.message;
             }
+
+            content.appendChild(header);
+            content.appendChild(messageContent);
+
+            div.appendChild(avatar);
+            div.appendChild(content);
+
+            return div;
         }
 
-        // Enviar imagem
-        async function sendImage(file) {
-            if (file && currentUser) {
-                const storagePath = `uploads/${Date.now()}-${file.name}`;
-                const imageRef = storageRef(storage, storagePath);
+        // Sign out function
+        window.signOut = () => {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            });
+        };
 
-                await uploadBytes(imageRef, file);
-                const downloadURL = await getDownloadURL(imageRef);
-
-                const chatRef = ref(database, 'chat');
-                push(chatRef, {
-                    name: currentUser.name,
-                    content: `<img src="${downloadURL}" alt="Enviado" class="max-w-full"/>`,
-                    verified: currentUser.verified || false,
-                    ceo: currentUser.ceo || false,
-                    timestamp: Date.now()
-                });
-            }
-        }
-
-        // Arquivo selecionado
-        function handleFileInput(event) {
-            const file = event.target.files[0];
-            sendImage(file);
-        }
-
-        window.sendMessage = sendMessage;
-        window.handleFileInput = handleFileInput;
-        window.initializeChat = initializeChat;
-
-        document.addEventListener("DOMContentLoaded", initializeChat);
     </script>
-</head>
-<body class="bg-gray-100">
-    <div class="flex flex-col h-screen">
-        <header class="bg-green-600 text-white p-4 text-center font-bold text-xl">
-            Chat Real-time
-        </header>
-        <div id="chat-list" class="flex-1 overflow-y-auto p-4 bg-white"></div>
-        <div class="p-4 flex items-center bg-gray-200 border-t">
-            <input id="message-input" type="text" placeholder="Digite uma mensagem..." class="flex-1 p-2 rounded-full border"/>
-            <input id="file-input" type="file" class="hidden" onchange="handleFileInput(event)"/>
-            <button onclick="document.getElementById('file-input').click()" class="ml-4 text-green-600">
-                <i class="fas fa-paperclip"></i>
-            </button>
-            <button onclick="sendMessage()" class="ml-4 text-green-600">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
 </body>
 </html>
