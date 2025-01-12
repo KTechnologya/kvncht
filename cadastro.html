@@ -4,21 +4,10 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Cadastro de Usuário</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-    }
-    input[type="file"]::file-selector-button {
-      display: none;
-    }
-  </style>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
@@ -72,7 +61,10 @@
       }, function(error) {
         console.error("Erro no upload da imagem:", error);
       }, function() {
-        alert("Imagem carregada com sucesso!");
+        uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+          alert("Imagem carregada com sucesso! URL da imagem: " + downloadURL);
+          return downloadURL;
+        });
       });
     }
 
@@ -89,45 +81,45 @@
       const profileImage = document.getElementById('profile-image').files[0];  // Captura a imagem
 
       if (profileImage) {
-        uploadImage(profileImage);  // Realiza o upload da imagem
-      }
+        uploadImage(profileImage).then(downloadURL => {
+          firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              const user = userCredential.user;
+              const userId = user.uid;
+              const registrationDate = new Date().toLocaleDateString('pt-BR');
 
-      firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          const userId = user.uid;
-          const registrationDate = new Date().toLocaleDateString('pt-BR');
+              // Salva no Firebase Realtime Database
+              firebase.database().ref('users/' + userId).set({
+                id: userId,
+                name: name,
+                surname: surname,
+                email: email,
+                phone: phone,
+                address: address,
+                verified: false,
+                banned: false,
+                reason: '',
+                ceo: false,
+                registrationDate: registrationDate,
+                profileImageUrl: downloadURL // Adiciona a URL da imagem ao usuário
+              });
 
-          firebase.database().ref('users/' + userId).set({
-            id: userId,
-            name: name,
-            surname: surname,
-            email: email,
-            phone: phone,
-            address: address,
-            verified: false,
-            banned: false,
-            reason: '',
-            ceo: false,
-            registrationDate: registrationDate
-          });
-
-          window.location.href = 'login.html';
-        })
-        .catch((error) => {
-          console.error(error);
-          alert('Erro ao cadastrar usuário: ' + error.message);
+              window.location.href = 'login.html';
+            })
+            .catch((error) => {
+              console.error(error);
+              alert('Erro ao cadastrar usuário: ' + error.message);
+            });
         });
+      }
     }
   </script>
 </head>
 <body class="bg-gray-100">
   <div class="flex flex-col min-h-screen">
-    <!-- Header -->
     <header class="bg-blue-600 text-white p-4 flex items-center justify-center">
       <h1 class="text-xl font-bold">CADASTRO</h1>
     </header>
-    <!-- Registration Form -->
     <div class="flex-1 overflow-y-auto p-4 flex items-center justify-center">
       <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
         <form onsubmit="registerUser(event)">
