@@ -10,11 +10,6 @@
         body {
             font-family: 'Roboto', sans-serif;
         }
-        @media (min-width: 640px) {
-            body {
-                display: none;
-            }
-        }
         .dropdown-menu {
             display: none;
             position: absolute;
@@ -96,7 +91,7 @@
             authDomain: "kelvinchat-f9499.firebaseapp.com",
             databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
             projectId: "kelvinchat-f9499",
-            storageBucket: "kelvinchat-f9499.firebasestorage.app",
+            storageBucket: "kelvinchat-f9499.appspot.com",
             messagingSenderId: "972962322611",
             appId: "1:972962322611:web:ff5416bb049abea350f8c6",
             measurementId: "G-K99GCK98ZR"
@@ -151,8 +146,8 @@
                             <div class="flex justify-between">
                                 <div class="flex items-center">
                                     <h2 class="text-lg font-semibold">${messageData.firstName} ${messageData.lastName}</h2>
-                                    ${messageData.verified ? '<img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>' : ''}
-                                    ${messageData.ceo ? '<img alt="Ícone de CEO" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png"/>' : ''}
+                                    ${messageData.verified ? '<img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://placehold.co/16x16?text=V&bg=blue&fg=white"/>' : ''}
+                                    ${messageData.ceo ? '<img alt="Ícone de CEO" class="ml-2 w-4 h-4" src="https://placehold.co/16x16?text=C&bg=gold&fg=white"/>' : ''}
                                 </div>
                                 <span class="text-sm text-gray-500">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
                             </div>
@@ -223,7 +218,7 @@
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
                                         <h2 class="text-lg font-semibold">${currentUser.displayName}</h2>
-                                        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+                                        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://placehold.co/16x16?text=V&bg=blue&fg=white"/>
                                     </div>
                                     <span class="text-sm text-gray-500">${new Date().toLocaleTimeString()}</span>
                                 </div>
