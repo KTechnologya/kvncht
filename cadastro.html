@@ -1,189 +1,176 @@
 <html lang="pt-BR">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Cadastro de Usuário
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-  <style>
-   body {
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Cadastro de Usuário</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        body {
             font-family: 'Roboto', sans-serif;
         }
         input[type="file"]::file-selector-button {
             display: none;
         }
-  </style>
- </head>
- <body class="bg-gray-100">
-  <div class="flex flex-col min-h-screen">
-   <!-- Header -->
-   <header class="bg-blue-600 text-white p-4 flex items-center justify-center">
-    <h1 class="text-xl font-bold">
-     CADASTRO
-    </h1>
-   </header>
-   <!-- Registration Form -->
-   <div class="flex-1 overflow-y-auto p-4 flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
-     <form id="registration-form">
-      <div class="space-y-4">
-       <div>
-        <label class="block text-gray-700">
-         Nome
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="first-name" placeholder="Digite seu nome" required="" type="text"/>
-       </div>
-       <div>
-        <label class="block text-gray-700">
-         Sobrenome
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="last-name" placeholder="Digite seu sobrenome" required="" type="text"/>
-       </div>
-       <div>
-        <label class="block text-gray-700">
-         Email
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="email" placeholder="Digite seu email" required="" type="email"/>
-       </div>
-       <div>
-        <label class="block text-gray-700">
-         Telefone
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="phone" placeholder="Digite seu telefone" required="" type="text"/>
-       </div>
-       <div>
-        <label class="block text-gray-700">
-         Endereço
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="address" placeholder="Digite seu endereço" required="" type="text"/>
-       </div>
-       <div>
-        <label class="block text-gray-700">
-         Senha
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="password" placeholder="Digite sua senha" required="" type="password"/>
-       </div>
-       <div>
-        <label class="block text-gray-700">
-         Confirme sua Senha
-        </label>
-        <input class="w-full border rounded-lg px-4 py-2" id="confirm-password" placeholder="Confirme sua senha" required="" type="password"/>
-       </div>
-       <div class="flex items-center">
-        <input class="mr-2" id="terms" required="" type="checkbox"/>
-        <label class="text-gray-700" for="terms">
-         Eu aceito os
-         <a class="text-blue-600 hover:underline" href="https://ktechnologya.github.io/kvncht/termos.html">
-          termos e condições
-         </a>
-        </label>
-       </div>
-       <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300" type="submit">
-        Cadastrar
-       </button>
-      </div>
-     </form>
-     <p class="mt-4 text-gray-700">
-      Já tem uma conta?
-      <a class="text-blue-600 hover:underline" href="https://ktechnologya.github.io/kvncht/login.html">
-       Faça login
-      </a>
-     </p>
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="bg-blue-600 text-white p-4 flex items-center justify-center">
+            <h1 class="text-xl font-bold">CADASTRO</h1>
+        </header>
+        <!-- Registration Form -->
+        <div class="flex-1 overflow-y-auto p-4 flex items-center justify-center">
+            <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+                <form id="registration-form">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700">Nome</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="first-name" placeholder="Digite seu nome" required type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700">Sobrenome</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="last-name" placeholder="Digite seu sobrenome" required type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700">Email</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="email" placeholder="Digite seu email" required type="email"/>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700">Telefone</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="phone" placeholder="Digite seu telefone" required type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700">Endereço</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="address" placeholder="Digite seu endereço" required type="text"/>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700">Senha</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="password" placeholder="Digite sua senha" required type="password"/>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700">Confirme sua Senha</label>
+                            <input class="w-full border rounded-lg px-4 py-2" id="confirm-password" placeholder="Confirme sua senha" required type="password"/>
+                        </div>
+                        <div class="flex items-center">
+                            <input class="mr-2" id="terms" required type="checkbox"/>
+                            <label class="text-gray-700" for="terms">
+                                Eu aceito os
+                                <a class="text-blue-600 hover:underline" href="https://ktechnologya.github.io/kvncht/termos.html">termos e condições</a>
+                            </label>
+                        </div>
+                        <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300" type="submit">Cadastrar</button>
+                    </div>
+                </form>
+                <p class="mt-4 text-gray-700">
+                    Já tem uma conta?
+                    <a class="text-blue-600 hover:underline" href="https://ktechnologya.github.io/kvncht/login.html">Faça login</a>
+                </p>
+            </div>
+        </div>
     </div>
-   </div>
-  </div>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
-      authDomain: "kelvinchat-f9499.firebaseapp.com",
-      databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
-      projectId: "kelvinchat-f9499",
-      storageBucket: "kelvinchat-f9499.firebasestorage.app",
-      messagingSenderId: "972962322611",
-      appId: "1:972962322611:web:ff5416bb049abea350f8c6",
-      measurementId: "G-K99GCK98ZR"
-    };
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+            authDomain: "kelvinchat-f9499.firebaseapp.com",
+            databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+            projectId: "kelvinchat-f9499",
+            storageBucket: "kelvinchat-f9499.firebasestorage.app",
+            messagingSenderId: "972962322611",
+            appId: "1:972962322611:web:ff5416bb049abea350f8c6",
+            measurementId: "G-K99GCK98ZR"
+        };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth();
-    const database = getDatabase(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth();
+        const database = getDatabase(app);
 
-    document.getElementById('registration-form').addEventListener('submit', function(event) {
-      event.preventDefault();
+        document.getElementById('registration-form').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-      const firstName = document.getElementById('first-name').value;
-      const lastName = document.getElementById('last-name').value;
-      const email = document.getElementById('email').value;
-      const phone = document.getElementById('phone').value;
-      const address = document.getElementById('address').value;
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirm-password').value;
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
 
-      if (password !== confirmPassword) {
-        alert('As senhas inseridas não coincidem. Por favor, verifique e insira as senhas corretamente.');
-        return;
-      }
+            if (password !== confirmPassword) {
+                alert('As senhas inseridas não coincidem. Por favor, verifique e insira as senhas corretamente.');
+                return;
+            }
 
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          const userId = user.uid;
-          const registrationDate = new Date().toLocaleDateString('pt-BR');
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    const userId = user.uid;
+                    const registrationDate = new Date().toLocaleDateString('pt-BR');
 
-          set(ref(database, 'users/' + userId), {
-            id: userId,
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            phone: phone,
-            address: address,
-            ceo: false,
-            verified: false,
-            banned: false,
-            reason: '',
-            registrationDate: registrationDate
-          });
+                    const userRef = ref(database, 'users/' + userId);
 
-          alert('Usuário cadastrado com sucesso!');
-          window.location.href = "https://ktechnologya.github.io/kvncht/login.html";
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          let errorMessage = '';
+                    get(child(userRef, userId)).then((snapshot) => {
+                        if (!snapshot.exists()) {
+                            set(userRef, {
+                                id: userId,
+                                firstName: firstName,
+                                lastName: lastName,
+                                email: email,
+                                phone: phone,
+                                address: address,
+                                ceo: false,
+                                verified: false,
+                                banned: false,
+                                reason: '',
+                                registrationDate: registrationDate
+                            }).then(() => {
+                                alert('Usuário cadastrado com sucesso!');
+                                window.location.href = "https://ktechnologya.github.io/kvncht/login.html";
+                            }).catch((error) => {
+                                alert('Erro ao salvar os dados do usuário: ' + error.message);
+                            });
+                        } else {
+                            alert('Usuário já existe.');
+                        }
+                    }).catch((error) => {
+                        alert('Erro ao verificar a existência do usuário: ' + error.message);
+                    });
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    let errorMessage = '';
 
-          switch (errorCode) {
-            case 'auth/email-already-in-use':
-              errorMessage = 'O e-mail fornecido já está cadastrado em nossa plataforma. Por favor, utilize um e-mail diferente ou faça login na sua conta existente.';
-              break;
-            case 'auth/invalid-email':
-              errorMessage = 'O endereço de e-mail fornecido não é válido. Por favor, insira um e-mail válido e tente novamente.';
-              break;
-            case 'auth/weak-password':
-              errorMessage = 'A senha fornecida é inválida. Certifique-se de que sua senha tenha pelo menos 6 caracteres e tente novamente.';
-              break;
-            case 'auth/network-request-failed':
-              errorMessage = 'Houve um problema ao se conectar ao servidor. Verifique sua conexão com a internet e tente novamente.';
-              break;
-            default:
-              errorMessage = 'Ocorreu um erro inesperado. Tente novamente mais tarde. Se o problema persistir, entre em contato com o suporte.';
-          }
+                    switch (errorCode) {
+                        case 'auth/email-already-in-use':
+                            errorMessage = 'O e-mail fornecido já está cadastrado em nossa plataforma. Por favor, utilize um e-mail diferente ou faça login na sua conta existente.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = 'O endereço de e-mail fornecido não é válido. Por favor, insira um e-mail válido e tente novamente.';
+                            break;
+                        case 'auth/weak-password':
+                            errorMessage = 'A senha fornecida é inválida. Certifique-se de que sua senha tenha pelo menos 6 caracteres e tente novamente.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage = 'Houve um problema ao se conectar ao servidor. Verifique sua conexão com a internet e tente novamente.';
+                            break;
+                        default:
+                            errorMessage = 'Ocorreu um erro inesperado. Tente novamente mais tarde. Se o problema persistir, entre em contato com o suporte.';
+                    }
 
-          alert(`Erro: ${errorMessage}`);
+                    alert(`Erro: ${errorMessage}`);
+                });
         });
-    });
-  </script>
- </body>
+    </script>
+</body>
 </html>
