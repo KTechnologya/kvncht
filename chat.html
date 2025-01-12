@@ -58,9 +58,12 @@
      <img alt="Imagem de perfil do contato 1" class="rounded-full" src="https://placehold.co/50x50"/>
      <div class="ml-3 flex-1">
       <div class="flex justify-between">
-       <h2 class="text-lg font-semibold">
-        Mãe
-       </h2>
+       <div class="flex items-center">
+        <h2 class="text-lg font-semibold">
+         Mãe
+        </h2>
+        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </div>
        <span class="text-sm text-gray-500">
         12:45
        </span>
@@ -74,15 +77,18 @@
      <img alt="Imagem de perfil do contato 2" class="rounded-full" src="https://placehold.co/50x50"/>
      <div class="ml-3 flex-1">
       <div class="flex justify-between">
-       <h2 class="text-lg font-semibold">
-        Pai
-       </h2>
+       <div class="flex items-center">
+        <h2 class="text-lg font-semibold">
+         Pai
+        </h2>
+        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </div>
        <span class="text-sm text-gray-500">
         11:30
        </span>
       </div>
       <p class="text-gray-600">
-       Tudo bem por aqui!
+       Tudo bem por aqui! chega a ter ser engraçado iso poxa kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
       </p>
      </div>
     </div>
@@ -90,9 +96,12 @@
      <img alt="Imagem de perfil do contato 3" class="rounded-full" src="https://placehold.co/50x50"/>
      <div class="ml-3 flex-1">
       <div class="flex justify-between">
-       <h2 class="text-lg font-semibold">
-        Irmã
-       </h2>
+       <div class="flex items-center">
+        <h2 class="text-lg font-semibold">
+         Irmã
+        </h2>
+        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </div>
        <span class="text-sm text-gray-500">
         Ontem
        </span>
@@ -106,9 +115,12 @@
      <img alt="Imagem de perfil do contato 4" class="rounded-full" src="https://placehold.co/50x50"/>
      <div class="ml-3 flex-1">
       <div class="flex justify-between">
-       <h2 class="text-lg font-semibold">
-        Tio
-       </h2>
+       <div class="flex items-center">
+        <h2 class="text-lg font-semibold">
+         Tio
+        </h2>
+        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </div>
        <span class="text-sm text-gray-500">
         Ontem
        </span>
@@ -122,9 +134,12 @@
      <img alt="Imagem de perfil do contato 5" class="rounded-full" src="https://placehold.co/50x50"/>
      <div class="ml-3 flex-1">
       <div class="flex justify-between">
-       <h2 class="text-lg font-semibold">
-        Primo
-       </h2>
+       <div class="flex items-center">
+        <h2 class="text-lg font-semibold">
+         Primo
+        </h2>
+        <img alt="Ícone de verificado" class="ml-2 w-4 h-4" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>
+       </div>
        <span class="text-sm text-gray-500">
         2 dias atrás
        </span>
@@ -142,17 +157,17 @@
      </i>
     </button>
     <div class="dropdown-menu" id="dropdown-menu">
-     <a href="#">
+     <a href="https://ktechnologya.github.io/kvncht/perfil.html">
       <i class="fas fa-user">
       </i>
       Meu perfil
      </a>
-     <a href="#">
+     <a href="#" onclick="openCamera()">
       <i class="fas fa-camera">
       </i>
       Enviar foto
      </a>
-     <a href="#">
+     <a href="#" onclick="openGallery()">
       <i class="fas fa-images">
       </i>
       Enviar imagens
@@ -177,6 +192,23 @@
         } else {
             dropdownMenu.style.display = 'none';
         }
+    }
+
+    function openCamera() {
+        // This will open the camera on mobile devices
+        var cameraInput = document.createElement('input');
+        cameraInput.setAttribute('type', 'file');
+        cameraInput.setAttribute('accept', 'image/*');
+        cameraInput.setAttribute('capture', 'camera');
+        cameraInput.click();
+    }
+
+    function openGallery() {
+        // This will open the gallery on mobile devices
+        var galleryInput = document.createElement('input');
+        galleryInput.setAttribute('type', 'file');
+        galleryInput.setAttribute('accept', 'image/*');
+        galleryInput.click();
     }
   </script>
  </body>
