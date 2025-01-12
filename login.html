@@ -43,13 +43,13 @@
         </label>
         <input class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Digite sua senha" required="" type="password" id="password"/>
        </div>
+       <div class="flex items-center">
+        <input class="mr-2" id="remember" type="checkbox"/>
+        <label class="text-gray-700" for="remember">
+         Lembrar-me
+        </label>
+       </div>
        <div class="flex items-center justify-between">
-        <div class="flex items-center">
-         <input class="mr-2" id="remember" type="checkbox"/>
-         <label class="text-gray-700" for="remember">
-          Lembrar-me
-         </label>
-        </div>
         <a class="text-blue-600 hover:underline" href="#" id="forgot-password-link">
          Esqueceu a senha?
         </a>
@@ -96,6 +96,7 @@
 
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('remember').checked;
 
       if (!email || !password) {
         alert('Por favor, preencha todos os campos antes de continuar.');
@@ -106,6 +107,15 @@
         .then((userCredential) => {
           const user = userCredential.user;
           alert('Login realizado com sucesso!');
+          
+          if (rememberMe) {
+            localStorage.setItem('userEmail', email);
+            localStorage.setItem('userPassword', password);
+          } else {
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userPassword');
+          }
+
           // Redirecionar para a página de chat
           window.location.href = "https://ktechnologya.github.io/kvncht/chat.html";
         })
@@ -172,6 +182,17 @@
 
           alert(`Erro: ${errorMessage}`);
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedEmail = localStorage.getItem('userEmail');
+      const savedPassword = localStorage.getItem('userPassword');
+
+      if (savedEmail && savedPassword) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('password').value = savedPassword;
+        document.getElementById('remember').checked = true;
+      }
     });
   </script>
  </body>
