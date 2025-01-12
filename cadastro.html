@@ -10,9 +10,6 @@
     body {
         font-family: 'Roboto', sans-serif;
     }
-    input[type="file"]::file-selector-button {
-        display: none;
-    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -26,13 +23,6 @@
     <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
      <form id="registrationForm" onsubmit="return validateForm(event)">
       <div class="space-y-4">
-       <div class="flex items-center">
-        <img alt="Imagem de perfil do usuário" class="rounded-full w-24 h-24" id="profile-image-preview" src="https://placehold.co/100x100"/>
-        <label class="ml-4 bg-blue-600 text-white py-2 px-4 rounded-lg cursor-pointer hover:bg-blue-700 transition duration-300">
-         Escolher Foto
-         <input accept="image/*" class="hidden" id="profile-image" onchange="previewImage(event)" required="" type="file"/>
-        </label>
-       </div>
        <div>
         <label class="block text-gray-700">Nome</label>
         <input id="name" class="w-full border rounded-lg px-4 py-2" placeholder="Digite seu nome" required="" type="text"/>
@@ -106,26 +96,11 @@
     const auth = getAuth();
     const database = getDatabase(app);
 
-    function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const output = document.getElementById('profile-image-preview');
-            output.src = reader.result;
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    }
-
     function validateForm(event) {
         event.preventDefault();  // Impede o envio do formulário e garante que o código JS seja executado
         
-        const profileImage = document.getElementById('profile-image');
         const terms = document.getElementById('terms');
         
-        if (!profileImage.value) {
-            alert('Você deve escolher uma foto de perfil.');
-            return false;
-        }
-
         if (!terms.checked) {
             alert('Você deve aceitar os termos e condições.');
             return false;
