@@ -29,49 +29,49 @@
    <!-- Registration Form -->
    <div class="flex-1 overflow-y-auto p-4 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
-     <form onsubmit="return validateForm()">
+     <form id="registration-form">
       <div class="space-y-4">
        <div>
         <label class="block text-gray-700">
          Nome
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Digite seu nome" required="" type="text"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="first-name" placeholder="Digite seu nome" required="" type="text"/>
        </div>
        <div>
         <label class="block text-gray-700">
          Sobrenome
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Digite seu sobrenome" required="" type="text"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="last-name" placeholder="Digite seu sobrenome" required="" type="text"/>
        </div>
        <div>
         <label class="block text-gray-700">
          Email
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Digite seu email" required="" type="email"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="email" placeholder="Digite seu email" required="" type="email"/>
        </div>
        <div>
         <label class="block text-gray-700">
          Telefone
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Digite seu telefone" required="" type="text"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="phone" placeholder="Digite seu telefone" required="" type="text"/>
        </div>
        <div>
         <label class="block text-gray-700">
          Endereço
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Digite seu endereço" required="" type="text"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="address" placeholder="Digite seu endereço" required="" type="text"/>
        </div>
        <div>
         <label class="block text-gray-700">
          Senha
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Digite sua senha" required="" type="password"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="password" placeholder="Digite sua senha" required="" type="password"/>
        </div>
        <div>
         <label class="block text-gray-700">
          Confirme sua Senha
         </label>
-        <input class="w-full border rounded-lg px-4 py-2" placeholder="Confirme sua senha" required="" type="password"/>
+        <input class="w-full border rounded-lg px-4 py-2" id="confirm-password" placeholder="Confirme sua senha" required="" type="password"/>
        </div>
        <div class="flex items-center">
         <input class="mr-2" id="terms" required="" type="checkbox"/>
@@ -82,7 +82,7 @@
          </a>
         </label>
        </div>
-       <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+       <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300" type="submit">
         Cadastrar
        </button>
       </div>
@@ -96,17 +96,76 @@
     </div>
    </div>
   </div>
-  <script>
-   function validateForm() {
-            const terms = document.getElementById('terms');
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
-            if (!terms.checked) {
-                alert('Você deve aceitar os termos e condições.');
-                return false;
-            }
-            
-            return true;
-        }
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+      authDomain: "kelvinchat-f9499.firebaseapp.com",
+      databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+      projectId: "kelvinchat-f9499",
+      storageBucket: "kelvinchat-f9499.firebasestorage.app",
+      messagingSenderId: "972962322611",
+      appId: "1:972962322611:web:ff5416bb049abea350f8c6",
+      measurementId: "G-K99GCK98ZR"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth();
+    const database = getDatabase(app);
+
+    document.getElementById('registration-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const firstName = document.getElementById('first-name').value;
+      const lastName = document.getElementById('last-name').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
+      const address = document.getElementById('address').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (password !== confirmPassword) {
+        alert('As senhas não coincidem.');
+        return;
+      }
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          const userId = user.uid;
+          const registrationDate = new Date().toLocaleDateString('pt-BR');
+
+          set(ref(database, 'users/' + userId), {
+            id: userId,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            phone: phone,
+            address: address,
+            ceo: false,
+            verified: false,
+            banned: false,
+            reason: '',
+            registrationDate: registrationDate
+          });
+
+          alert('Usuário cadastrado com sucesso!');
+          window.location.href = "https://ktechnologya.github.io/kvncht/login.html";
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          alert(`Erro: ${errorMessage}`);
+        });
+    });
   </script>
  </body>
 </html>
