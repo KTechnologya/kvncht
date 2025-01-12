@@ -7,35 +7,141 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+            authDomain: "kelvinchat-f9499.firebaseapp.com",
+            databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+            projectId: "kelvinchat-f9499",
+            storageBucket: "kelvinchat-f9499.appspot.com",
+            messagingSenderId: "972962322611",
+            appId: "1:972962322611:web:ff5416bb049abea350f8c6",
+            measurementId: "G-K99GCK98ZR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Helper function to fetch user data and display chat
+        let currentUser = null;
+
+        function initializeChat() {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const userRef = ref(database, `users/${user.uid}`);
+                    onValue(userRef, (snapshot) => {
+                        const userData = snapshot.val();
+                        if (userData.banned) {
+                            window.location.href = "banido.html";
+                        } else {
+                            currentUser = { uid: user.uid, ...userData };
+                            loadChatMessages();
+                        }
+                    });
+                } else {
+                    window.location.href = "login.html";
+                }
+            });
         }
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            bottom: 60px;
-            left: 10px;
-            background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            overflow: hidden;
-            z-index: 10;
+
+        // Load messages from database
+        function loadChatMessages() {
+            const chatRef = ref(database, 'chat');
+            onValue(chatRef, (snapshot) => {
+                const chatList = document.getElementById('chat-list');
+                chatList.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const message = childSnapshot.val();
+                    const messageElement = createMessageElement(message, childSnapshot.key);
+                    chatList.appendChild(messageElement);
+                });
+                chatList.scrollTop = chatList.scrollHeight;
+            });
         }
-        .dropdown-menu a {
-            display: flex;
-            align-items: center;
-            padding: 10px 20px;
-            text-decoration: none;
-            color: black;
+
+        // Create message element
+        function createMessageElement(message, key) {
+            const verifiedIcon = message.verified
+                ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png" class="w-4 h-4 ml-2"/>`
+                : '';
+            const ceoIcon = message.ceo
+                ? `<img src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_i35hrp.png" class="w-4 h-4 ml-2"/>`
+                : '';
+            const content = message.deleted
+                ? '<span class="italic text-gray-500">Essa mensagem foi apagada por um administrador</span>'
+                : message.content;
+
+            return `
+                <div class="p-4 border-b">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold text-white">
+                            ${message.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="ml-3">
+                            <h2 class="text-lg font-semibold">
+                                ${message.name} ${verifiedIcon} ${ceoIcon}
+                            </h2>
+                            <p class="text-gray-600">${content}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
-        .dropdown-menu a:hover {
-            background-color: #f0f0f0;
+
+        // Send a new message
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            if (message && currentUser) {
+                const chatRef = ref(database, 'chat');
+                push(chatRef, {
+                    name: currentUser.name,
+                    content: message,
+                    verified: currentUser.verified,
+                    ceo: currentUser.ceo,
+                    timestamp: Date.now()
+                });
+                messageInput.value = '';
+            }
         }
-        .dropdown-menu i {
-            margin-right: 10px;
+
+        // Handle file upload
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && currentUser) {
+                const chatRef = ref(database, 'chat');
+                push(chatRef, {
+                    name: currentUser.name,
+                    content: `[Arquivo: ${file.name}]`,
+                    verified: currentUser.verified,
+                    ceo: currentUser.ceo,
+                    timestamp: Date.now()
+                });
+            }
         }
-    </style>
+
+        // Delete a message
+        function deleteMessage(key) {
+            const messageRef = ref(database, `chat/${key}`);
+            update(messageRef, { deleted: true });
+        }
+
+        window.sendMessage = sendMessage;
+        window.handleFileSelect = handleFileSelect;
+        window.initializeChat = initializeChat;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeChat();
+        });
+    </script>
 </head>
 <body class="bg-gray-100">
     <div class="flex flex-col h-screen">
@@ -44,90 +150,14 @@
             <h1 class="text-xl font-bold">CHAT DA FAMÍLIA</h1>
         </header>
         <!-- Chat List -->
-        <div class="flex-1 overflow-y-auto" id="chat-list">
-            <!-- Mensagens serão carregadas aqui -->
-        </div>
+        <div class="flex-1 overflow-y-auto" id="chat-list"></div>
         <!-- Message Input -->
         <div class="bg-white p-4 flex items-center border-t relative">
-            <button class="text-green-600 mr-4" onclick="toggleDropdown()">
-                <i class="fas fa-plus text-2xl"></i>
-            </button>
-            <div class="dropdown-menu" id="dropdown-menu">
-                <a href="https://ktechnologya.github.io/kvncht/perfil.html">
-                    <i class="fas fa-user"></i>
-                    Meu perfil
-                </a>
-                <label class="flex items-center px-4 py-2 cursor-pointer">
-                    <i class="fas fa-camera"></i>
-                    <span class="ml-2">Enviar foto</span>
-                    <input type="file" id="file-input" accept="image/*" hidden onchange="handleFileSelect(event)" />
-                </label>
-            </div>
             <input class="flex-1 border rounded-full px-4 py-2" id="message-input" placeholder="Digite uma mensagem..." type="text"/>
             <button class="ml-4 text-green-600" onclick="sendMessage()">
                 <i class="fas fa-paper-plane text-2xl"></i>
             </button>
         </div>
     </div>
-    <script>
-        // Variável simulada para testar em WebView sem Firebase
-        const mockMessages = [];
-
-        // Exibição de mensagens
-        function loadChatMessages() {
-            const chatList = document.getElementById('chat-list');
-            chatList.innerHTML = '';
-            mockMessages.forEach((message) => {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'bg-white p-4 flex items-center border-b';
-                messageElement.innerHTML = `
-                    <div class="ml-3 flex-1">
-                        <h2 class="text-lg font-semibold">${message.name}</h2>
-                        <p class="text-gray-600">${message.text}</p>
-                    </div>
-                `;
-                chatList.appendChild(messageElement);
-            });
-            chatList.scrollTop = chatList.scrollHeight;
-        }
-
-        // Enviar mensagem
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value.trim();
-            if (!message) {
-                alert("Digite uma mensagem!");
-                return;
-            }
-
-            // Simular envio em WebView
-            mockMessages.push({ name: "Usuário", text: message });
-            messageInput.value = '';
-            loadChatMessages();
-        }
-
-        // Selecionar arquivo
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                alert(`Arquivo "${file.name}" selecionado!`);
-                // Implementar envio do arquivo para o servidor, se necessário
-            }
-        }
-
-        // Mostrar/Esconder Dropdown
-        function toggleDropdown() {
-            const dropdownMenu = document.getElementById('dropdown-menu');
-            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // Carregar mensagens ao iniciar
-        loadChatMessages();
-
-        // Tornar funções disponíveis globalmente
-        window.sendMessage = sendMessage;
-        window.toggleDropdown = toggleDropdown;
-        window.handleFileSelect = handleFileSelect;
-    </script>
 </body>
 </html>
