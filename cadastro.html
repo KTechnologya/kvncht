@@ -32,6 +32,7 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
+    // Função para exibir a imagem selecionada no preview
     function previewImage(event) {
       const file = event.target.files[0];
       if (file) {
@@ -44,15 +45,18 @@
       }
     }
 
+    // Função de validação do formulário
     function validateForm() {
       const profileImage = document.getElementById('profile-image');
       const terms = document.getElementById('terms');
       
-      if (!profileImage.value) {
+      // Verifica se a foto de perfil foi selecionada
+      if (!profileImage.files.length) {
         alert('Você deve escolher uma foto de perfil.');
         return false;
       }
 
+      // Verifica se os termos e condições foram aceitos
       if (!terms.checked) {
         alert('Você deve aceitar os termos e condições.');
         return false;
@@ -61,6 +65,7 @@
       return true;
     }
 
+    // Função para cadastrar o usuário
     function registerUser(event) {
       event.preventDefault();
       if (!validateForm()) return;
@@ -72,12 +77,14 @@
       const address = document.getElementById('address').value;
       const password = document.getElementById('password').value;
 
+      // Cria o usuário no Firebase Authentication
       firebase.auth().createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
           const user = userCredential.user;
           const userId = user.uid;
           const registrationDate = new Date().toLocaleDateString('pt-BR');
 
+          // Salva os dados do usuário no Firebase Realtime Database
           firebase.database().ref('users/' + userId).set({
             id: userId,
             name: name,
@@ -92,6 +99,7 @@
             registrationDate: registrationDate
           });
 
+          // Redireciona para a página de login
           window.location.href = 'login.html';
         })
         .catch((error) => {
