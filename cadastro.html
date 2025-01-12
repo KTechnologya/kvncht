@@ -17,8 +17,9 @@
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+
   <script>
-    // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
       authDomain: "kelvinchat-f9499.firebaseapp.com",
@@ -29,10 +30,8 @@
       appId: "1:972962322611:web:ff5416bb049abea350f8c6",
       measurementId: "G-K99GCK98ZR"
     };
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
 
-    // Função para exibir a imagem selecionada no preview
     function previewImage(event) {
       const file = event.target.files[0];
       if (file) {
@@ -45,18 +44,15 @@
       }
     }
 
-    // Função de validação do formulário
     function validateForm() {
       const profileImage = document.getElementById('profile-image');
       const terms = document.getElementById('terms');
       
-      // Verifica se a foto de perfil foi selecionada
-      if (!profileImage.files.length) {
+      if (!profileImage.value) {
         alert('Você deve escolher uma foto de perfil.');
         return false;
       }
 
-      // Verifica se os termos e condições foram aceitos
       if (!terms.checked) {
         alert('Você deve aceitar os termos e condições.');
         return false;
@@ -65,7 +61,21 @@
       return true;
     }
 
-    // Função para cadastrar o usuário
+    function uploadImage(file) {
+      const storageRef = firebase.storage().ref();
+      const imagesRef = storageRef.child('images/' + file.name);
+      
+      const uploadTask = imagesRef.put(file);
+      
+      uploadTask.on('state_changed', function(snapshot) {
+        // Acompanhamento do progresso do upload
+      }, function(error) {
+        console.error("Erro no upload da imagem:", error);
+      }, function() {
+        alert("Imagem carregada com sucesso!");
+      });
+    }
+
     function registerUser(event) {
       event.preventDefault();
       if (!validateForm()) return;
@@ -76,15 +86,18 @@
       const phone = document.getElementById('phone').value;
       const address = document.getElementById('address').value;
       const password = document.getElementById('password').value;
+      const profileImage = document.getElementById('profile-image').files[0];  // Captura a imagem
 
-      // Cria o usuário no Firebase Authentication
+      if (profileImage) {
+        uploadImage(profileImage);  // Realiza o upload da imagem
+      }
+
       firebase.auth().createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
           const user = userCredential.user;
           const userId = user.uid;
           const registrationDate = new Date().toLocaleDateString('pt-BR');
 
-          // Salva os dados do usuário no Firebase Realtime Database
           firebase.database().ref('users/' + userId).set({
             id: userId,
             name: name,
@@ -99,7 +112,6 @@
             registrationDate: registrationDate
           });
 
-          // Redireciona para a página de login
           window.location.href = 'login.html';
         })
         .catch((error) => {
