@@ -33,12 +33,15 @@
     firebase.initializeApp(firebaseConfig);
 
     function previewImage(event) {
-      const reader = new FileReader();
-      reader.onload = function() {
-        const output = document.getElementById('profile-image-preview');
-        output.src = reader.result;
-      };
-      reader.readAsDataURL(event.target.files[0]);
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const output = document.getElementById('profile-image-preview');
+          output.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     function validateForm() {
