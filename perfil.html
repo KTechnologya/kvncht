@@ -9,6 +9,12 @@
   </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js">
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js">
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js">
+  </script>
   <style>
    body {
             font-family: 'Roboto', sans-serif;
@@ -150,71 +156,145 @@
    </div>
   </div>
   <script>
-   let isVerified = false;
-
-    function editProfile() {
-        document.getElementById('edit-modal').classList.remove('hidden');
-        document.getElementById('edit-fullname').value = document.getElementById('user-fullname').textContent.split(': ')[1];
-        document.getElementById('edit-email').value = document.getElementById('user-email-info').textContent.split(': ')[1];
-        document.getElementById('edit-phone').value = document.getElementById('user-phone').textContent.split(': ')[1];
-        document.getElementById('edit-address').value = document.getElementById('user-address').textContent.split(': ')[1];
-        document.getElementById('edit-user-image-preview').src = document.getElementById('user-image').src;
-    }
-
-    function closeModal() {
-        document.getElementById('edit-modal').classList.add('hidden');
-    }
-
-    function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const output = document.getElementById('edit-user-image-preview');
-            output.src = reader.result;
+   // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+            authDomain: "kelvinchat-f9499.firebaseapp.com",
+            databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+            projectId: "kelvinchat-f9499",
+            storageBucket: "kelvinchat-f9499.appspot.com",
+            messagingSenderId: "972962322611",
+            appId: "1:972962322611:web:ff5416bb049abea350f8c6",
+            measurementId: "G-K99GCK98ZR"
         };
-        reader.readAsDataURL(event.target.files[0]);
-    }
 
-    function saveProfile() {
-        const fullname = document.getElementById('edit-fullname').value;
-        const email = document.getElementById('edit-email').value;
-        const phone = document.getElementById('edit-phone').value;
-        const address = document.getElementById('edit-address').value;
-        const image = document.getElementById('edit-user-image-preview').src;
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
 
-        document.getElementById('user-fullname').textContent = `Nome Completo: ${fullname}`;
-        document.getElementById('user-email-info').textContent = `Email: ${email}`;
-        document.getElementById('user-phone').textContent = `Telefone: ${phone}`;
-        document.getElementById('user-address').textContent = `Endereço: ${address}`;
-        document.getElementById('user-name').textContent = fullname;
-        document.getElementById('user-email').textContent = email;
-        document.getElementById('user-image').src = image;
+        let userId = "user123"; // Replace with the actual user ID
+        let isVerified = false;
 
-        if (isVerified) {
-            document.getElementById('user-name').innerHTML = `${fullname} <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+        // Fetch user data from Firebase Realtime Database
+        function fetchUserData() {
+            database.ref('users/' + userId).once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    document.getElementById('user-fullname').textContent = `Nome Completo: ${userData.firstName} ${userData.lastName}`;
+                    document.getElementById('user-email-info').textContent = `Email: ${userData.email}`;
+                    document.getElementById('user-phone').textContent = `Telefone: ${userData.phone}`;
+                    document.getElementById('user-address').textContent = `Endereço: ${userData.address}`;
+                    document.getElementById('user-name').textContent = `${userData.firstName} ${userData.lastName}`;
+                    document.getElementById('user-email').textContent = userData.email;
+                    document.getElementById('user-image').src = userData.avatar || "https://placehold.co/100x100";
+                    isVerified = userData.verified;
+                    if (isVerified) {
+                        document.getElementById('user-name').innerHTML += ` <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                    }
+                }
+            });
         }
 
-        closeModal();
-    }
+        function editProfile() {
+            document.getElementById('edit-modal').classList.remove('hidden');
+            const fullname = document.getElementById('user-fullname').textContent.split(': ')[1];
+            const [firstName, lastName] = fullname.split(' ');
+            document.getElementById('edit-fullname').value = `${firstName} ${lastName}`;
+            document.getElementById('edit-email').value = document.getElementById('user-email-info').textContent.split(': ')[1];
+            document.getElementById('edit-phone').value = document.getElementById('user-phone').textContent.split(': ')[1];
+            document.getElementById('edit-address').value = document.getElementById('user-address').textContent.split(': ')[1];
+            document.getElementById('edit-user-image-preview').src = document.getElementById('user-image').src;
+        }
 
-    function watchAd() {
-        alert('Assistindo ao anúncio...');
-        // Simulate watching an ad
-        setTimeout(() => {
-            isVerified = true;
-            const userNameElement = document.getElementById('user-name');
-            userNameElement.innerHTML = `Nome do Usuário <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
-            const verificationSection = document.getElementById('verification-section');
-            verificationSection.innerHTML = `
-                <h3 class="text-lg font-semibold text-green-800">
-                    Parabéns! Você agora é um usuário verificado.
-                </h3>
-                <p class="mt-2 text-gray-700">
-                    Seu perfil foi atualizado com sucesso e agora você possui o selo de verificação. Aproveite essa oportunidade para se destacar entre os demais usuários!
-                </p>
-            `;
-            alert('Parabéns! Você agora é um usuário verificado.');
-        }, 5000);
-    }
+        function closeModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('edit-user-image-preview');
+                output.src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        function saveProfile() {
+            const fullname = document.getElementById('edit-fullname').value;
+            const [firstName, lastName] = fullname.split(' ');
+            const email = document.getElementById('edit-email').value;
+            const phone = document.getElementById('edit-phone').value;
+            const address = document.getElementById('edit-address').value;
+            const imageFile = document.getElementById('edit-user-image').files[0];
+
+            if (imageFile) {
+                const storageRef = storage.ref('avatars/' + userId);
+                storageRef.put(imageFile).then(() => {
+                    storageRef.getDownloadURL().then((url) => {
+                        updateUserProfile(firstName, lastName, email, phone, address, url);
+                    });
+                });
+            } else {
+                const currentAvatar = document.getElementById('edit-user-image-preview').src;
+                updateUserProfile(firstName, lastName, email, phone, address, currentAvatar);
+            }
+        }
+
+        function updateUserProfile(firstName, lastName, email, phone, address, avatar) {
+            const userData = {
+                firstName,
+                lastName,
+                email,
+                phone,
+                address,
+                avatar,
+                verified: isVerified
+            };
+
+            database.ref('users/' + userId).set(userData).then(() => {
+                document.getElementById('user-fullname').textContent = `Nome Completo: ${firstName} ${lastName}`;
+                document.getElementById('user-email-info').textContent = `Email: ${email}`;
+                document.getElementById('user-phone').textContent = `Telefone: ${phone}`;
+                document.getElementById('user-address').textContent = `Endereço: ${address}`;
+                document.getElementById('user-name').textContent = `${firstName} ${lastName}`;
+                document.getElementById('user-email').textContent = email;
+                document.getElementById('user-image').src = avatar;
+
+                if (isVerified) {
+                    document.getElementById('user-name').innerHTML += ` <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                }
+
+                closeModal();
+            });
+        }
+
+        function watchAd() {
+            alert('Assistindo ao anúncio...');
+            // Simulate watching an ad
+            setTimeout(() => {
+                isVerified = true;
+                const userNameElement = document.getElementById('user-name');
+                userNameElement.innerHTML = `${userNameElement.textContent} <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                const verificationSection = document.getElementById('verification-section');
+                verificationSection.innerHTML = `
+                    <h3 class="text-lg font-semibold text-green-800">
+                        Parabéns! Você agora é um usuário verificado.
+                    </h3>
+                    <p class="mt-2 text-gray-700">
+                        Seu perfil foi atualizado com sucesso e agora você possui o selo de verificação. Aproveite essa oportunidade para se destacar entre os demais usuários!
+                    </p>
+                `;
+
+                // Update verified status in the database
+                database.ref('users/' + userId).update({ verified: true });
+
+                alert('Parabéns! Você agora é um usuário verificado.');
+            }, 5000);
+        }
+
+        // Fetch user data on page load
+        window.onload = fetchUserData;
   </script>
  </body>
 </html>
