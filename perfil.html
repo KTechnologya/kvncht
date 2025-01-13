@@ -2,218 +2,185 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Perfil do Usuário</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif; }
-        .loading {
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        #debug {
             position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .spin {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            font-size: 12px;
+            display: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- Loading -->
-    <div id="loading" class="loading">
-        <div class="text-white text-center">
-            <i class="fas fa-spinner spin text-4xl"></i>
-            <p class="mt-2">Carregando...</p>
+<body class="bg-gray-100">
+    <!-- Debug Info -->
+    <div id="debug"></div>
+
+    <!-- Main Content -->
+    <div class="p-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <!-- Basic Info -->
+            <div class="text-center mb-6">
+                <h1 id="userName" class="text-2xl font-bold mb-2">...</h1>
+                <p id="userEmail" class="text-gray-600">...</p>
+            </div>
+
+            <!-- User Info -->
+            <div class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded">
+                    <h2 class="font-bold mb-3">Informações Pessoais</h2>
+                    <div class="space-y-2">
+                        <p><i class="fas fa-id-badge mr-2 text-blue-500"></i><span id="userId">...</span></p>
+                        <p><i class="fas fa-phone mr-2 text-blue-500"></i><span id="userPhone">...</span></p>
+                        <p><i class="fas fa-map-marker mr-2 text-blue-500"></i><span id="userAddress">...</span></p>
+                        <p><i class="fas fa-calendar mr-2 text-blue-500"></i><span id="userRegistrationDate">...</span></p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded">
+                    <h2 class="font-bold mb-3">Status da Conta</h2>
+                    <div class="space-y-2">
+                        <p id="verificationStatus">
+                            <i class="fas fa-check-circle mr-2 text-blue-500"></i>
+                            <span id="userVerification">...</span>
+                        </p>
+                        <p>
+                            <i class="fas fa-user-tie mr-2 text-blue-500"></i>
+                            <span id="userType">...</span>
+                        </p>
+                        <p>
+                            <i class="fas fa-shield-alt mr-2 text-blue-500"></i>
+                            <span id="accountStatus">...</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Header -->
-    <header class="bg-blue-600 text-white p-4 shadow-md">
-        <div class="max-w-4xl mx-auto">
-            <h1 class="text-2xl font-bold">Perfil do Usuário</h1>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-4xl mx-auto p-4">
-        <div class="bg-white rounded-lg shadow-md p-6 mt-4">
-            <!-- Profile Header -->
-            <div class="flex flex-col md:flex-row items-center gap-6 border-b pb-6">
-                <div class="text-center md:text-left flex-1">
-                    <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
-                        <h2 id="userName" class="text-2xl font-bold">Carregando...</h2>
-                        <span id="verifiedBadge" class="hidden">
-                            <i class="fas fa-check-circle text-blue-600"></i>
-                        </span>
-                    </div>
-                    <p id="userEmail" class="text-gray-600">Carregando...</p>
-                    <p id="userRole" class="mt-1 inline-block px-3 py-1 rounded-full text-sm font-semibold"></p>
-                </div>
-            </div>
-
-            <!-- User Details -->
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Personal Information -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold border-b pb-2">Informações Pessoais</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-id-card w-6 text-blue-600"></i>
-                            <span id="userId" class="text-gray-700">Carregando...</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-phone w-6 text-blue-600"></i>
-                            <span id="userPhone" class="text-gray-700">Carregando...</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-map-marker-alt w-6 text-blue-600"></i>
-                            <span id="userAddress" class="text-gray-700">Carregando...</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-calendar w-6 text-blue-600"></i>
-                            <span id="userRegistrationDate" class="text-gray-700">Carregando...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Account Status -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold border-b pb-2">Status da Conta</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-user-shield w-6 text-blue-600"></i>
-                            <span id="userVerificationStatus" class="text-gray-700">Carregando...</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-star w-6 text-blue-600"></i>
-                            <span id="userType" class="text-gray-700">Carregando...</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-shield-alt w-6 text-blue-600"></i>
-                            <span id="userAccountStatus" class="text-gray-700">Carregando...</span>
-                        </div>
-                        <div id="banReason" class="hidden mt-2 p-3 bg-red-100 rounded-lg">
-                            <p class="text-red-700"></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
-            authDomain: "kelvinchat-f9499.firebaseapp.com",
-            databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
-            projectId: "kelvinchat-f9499",
-            storageBucket: "kelvinchat-f9499.appspot.com",
-            messagingSenderId: "972962322611",
-            appId: "1:972962322611:web:ff5416bb049abea350f8c6",
-            measurementId: "G-K99GCK98ZR"
-        };
+        // Debug Function
+        function debug(message) {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.style.display = 'block';
+            debugDiv.innerHTML += message + '<br>';
+            console.log(message);
+        }
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
+                authDomain: "kelvinchat-f9499.firebaseapp.com",
+                databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
+                projectId: "kelvinchat-f9499",
+                storageBucket: "kelvinchat-f9499.appspot.com",
+                messagingSenderId: "972962322611",
+                appId: "1:972962322611:web:ff5416bb049abea350f8c6"
+            };
 
-        // UI Elements
-        const loadingElement = document.getElementById('loading');
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            debug('Firebase inicializado com sucesso');
+        } catch (error) {
+            debug('Erro ao inicializar Firebase: ' + error.message);
+        }
 
-        // Show/Hide Loading
-        const showLoading = () => loadingElement.classList.remove('hidden');
-        const hideLoading = () => loadingElement.classList.add('hidden');
-
-        // Update UI with User Data
+        // Update UI
         function updateUI(userData) {
-            // Basic Info
-            document.getElementById('userName').textContent = `${userData.firstName} ${userData.lastName}`;
-            document.getElementById('userEmail').textContent = userData.email;
-            document.getElementById('userId').textContent = `ID: ${userData.id}`;
-            document.getElementById('userPhone').textContent = userData.phone || 'Telefone não cadastrado';
-            document.getElementById('userAddress').textContent = userData.address || 'Endereço não cadastrado';
-            document.getElementById('userRegistrationDate').textContent = userData.registrationDate;
+            try {
+                debug('Atualizando UI com dados: ' + JSON.stringify(userData));
 
-            // Verification Status
-            const verifiedBadge = document.getElementById('verifiedBadge');
-            if (userData.verified) {
-                verifiedBadge.classList.remove('hidden');
-                document.getElementById('userVerificationStatus').textContent = 'Conta Verificada';
-                document.getElementById('userVerificationStatus').classList.add('text-green-600');
-            } else {
-                verifiedBadge.classList.add('hidden');
-                document.getElementById('userVerificationStatus').textContent = 'Conta Não Verificada';
-            }
+                // Nome e Email
+                document.getElementById('userName').textContent = 
+                    `${userData.firstName || ''} ${userData.lastName || ''}`;
+                document.getElementById('userEmail').textContent = userData.email || '';
 
-            // User Type
-            let userType = 'Usuário Comum';
-            let roleColor = 'bg-gray-200 text-gray-800';
-            if (userData.ceo) {
-                userType = 'CEO';
-                roleColor = 'bg-purple-200 text-purple-800';
-            }
-            document.getElementById('userRole').textContent = userType;
-            document.getElementById('userRole').className = `mt-1 inline-block px-3 py-1 rounded-full text-sm font-semibold ${roleColor}`;
-            document.getElementById('userType').textContent = userType;
+                // Informações Pessoais
+                document.getElementById('userId').textContent = userData.id || '';
+                document.getElementById('userPhone').textContent = userData.phone || 'Não informado';
+                document.getElementById('userAddress').textContent = userData.address || 'Não informado';
+                document.getElementById('userRegistrationDate').textContent = 
+                    userData.registrationDate || 'Não informado';
 
-            // Account Status
-            const accountStatus = document.getElementById('userAccountStatus');
-            const banReason = document.getElementById('banReason');
-            if (userData.banned) {
-                accountStatus.textContent = 'Conta Banida';
-                accountStatus.classList.add('text-red-600');
-                if (userData.reason) {
-                    banReason.classList.remove('hidden');
-                    banReason.querySelector('p').textContent = `Motivo: ${userData.reason}`;
-                }
-            } else {
-                accountStatus.textContent = 'Conta Ativa';
-                accountStatus.classList.add('text-green-600');
-                banReason.classList.add('hidden');
+                // Status
+                document.getElementById('userVerification').textContent = 
+                    userData.verified ? 'Verificado' : 'Não Verificado';
+                document.getElementById('userType').textContent = 
+                    userData.ceo ? 'CEO' : 'Usuário';
+                document.getElementById('accountStatus').textContent = 
+                    userData.banned ? 'Conta Banida' : 'Conta Ativa';
+
+                debug('UI atualizada com sucesso');
+            } catch (error) {
+                debug('Erro ao atualizar UI: ' + error.message);
             }
         }
 
-        // Fetch User Data
+        // Fetch Data
         async function fetchUserData(userId) {
             try {
-                const snapshot = await database.ref(`users/${userId}`).once('value');
+                debug('Buscando dados do usuário: ' + userId);
+                
+                const userRef = firebase.database().ref('users/' + userId);
+                const snapshot = await userRef.once('value');
                 const userData = snapshot.val();
+
+                debug('Dados recebidos do Firebase: ' + JSON.stringify(userData));
+
                 if (userData) {
                     updateUI(userData);
                 } else {
-                    throw new Error('Usuário não encontrado');
+                    debug('Nenhum dado encontrado para o usuário');
                 }
             } catch (error) {
-                console.error('Erro ao buscar dados:', error);
-                alert('Erro ao carregar dados do usuário');
-            } finally {
-                hideLoading();
+                debug('Erro ao buscar dados: ' + error.message);
             }
+        }
+
+        // Get User ID
+        function getUserId() {
+            // Tentar pegar do Android
+            if (typeof Android !== 'undefined' && Android.getUserId) {
+                return Android.getUserId();
+            }
+            
+            // Tentar pegar da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('userId');
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Get userId from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('userId');
-            
-            if (userId) {
-                fetchUserData(userId);
-            } else {
-                hideLoading();
-                alert('ID do usuário não fornecido');
+            try {
+                debug('Inicializando aplicação...');
+                
+                const userId = getUserId();
+                debug('UserID obtido: ' + userId);
+
+                if (userId) {
+                    fetchUserData(userId);
+                } else {
+                    debug('UserID não encontrado');
+                }
+            } catch (error) {
+                debug('Erro na inicialização: ' + error.message);
             }
         });
     </script>
