@@ -1,162 +1,169 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Meu Perfil
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js">
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js">
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js">
-  </script>
-  <style>
-   body {
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+    <style>
+        body {
             font-family: 'Roboto', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
-  </style>
- </head>
- <body class="bg-gray-100">
-  <div class="flex flex-col h-screen">
-   <!-- Header -->
-   <header class="bg-green-600 text-white p-4 flex items-center justify-center">
-    <h1 class="text-xl font-bold">
-     Meu Perfil
-    </h1>
-   </header>
-   <!-- Profile Content -->
-   <div class="flex-1 overflow-y-auto p-4">
-    <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
-     <div class="flex items-center">
-      <img alt="Imagem de perfil do usuário" class="rounded-full w-24 h-24" id="user-image" src="https://placehold.co/100x100"/>
-      <div class="ml-4">
-       <h2 class="text-2xl font-semibold flex items-center" id="user-name">
-        Nome do Usuário
-       </h2>
-       <p class="text-gray-600" id="user-email">
-        email@exemplo.com
-       </p>
-      </div>
-     </div>
-     <div class="mt-6">
-      <h3 class="text-lg font-semibold border-b pb-2">
-       Informações Pessoais
-      </h3>
-      <div class="mt-4 space-y-4">
-       <div class="flex items-center">
-        <i class="fas fa-user text-green-600 mr-2">
-        </i>
-        <span class="text-gray-700" id="user-fullname">
-         Nome Completo: Nome do Usuário
-        </span>
-       </div>
-       <div class="flex items-center">
-        <i class="fas fa-envelope text-green-600 mr-2">
-        </i>
-        <span class="text-gray-700" id="user-email-info">
-         Email: email@exemplo.com
-        </span>
-       </div>
-       <div class="flex items-center">
-        <i class="fas fa-phone text-green-600 mr-2">
-        </i>
-        <span class="text-gray-700" id="user-phone">
-         Telefone: (00) 0000-0000
-        </span>
-       </div>
-       <div class="flex items-center">
-        <i class="fas fa-map-marker-alt text-green-600 mr-2">
-        </i>
-        <span class="text-gray-700" id="user-address">
-         Endereço: Rua Exemplo, 123, Cidade, Estado
-        </span>
-       </div>
-      </div>
-     </div>
-     <div class="mt-6">
-      <h3 class="text-lg font-semibold border-b pb-2">
-       Configurações
-      </h3>
-      <div class="mt-4 space-y-4">
-       <button class="w-full bg-green-600 text-white py-2 rounded-lg flex items-center justify-center hover:bg-green-700 transition duration-300" onclick="editProfile()">
-        <i class="fas fa-edit mr-2">
-        </i>
-        Editar Perfil
-       </button>
-      </div>
-     </div>
-     <div class="mt-6 bg-yellow-100 p-6 rounded-lg shadow-md" id="verification-section">
-      <h3 class="text-lg font-semibold text-yellow-800">
-       Quer ganhar o selo Verificado?
-      </h3>
-      <p class="mt-2 text-gray-700">
-       Isso irá aumentar a sua credibilidade na comunidade! Para obter o selo, basta clicar no botão abaixo, assistir a um anúncio e, ao final, você será reconhecido como um usuário verificado!
-      </p>
-      <button class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center hover:bg-blue-700 transition duration-300" onclick="watchAd()">
-       <i class="fas fa-video mr-2">
-       </i>
-       Clique aqui para assistir ao anúncio e obter seu selo! 🎥
-      </button>
-      <p class="mt-2 text-gray-700">
-       Após assistir ao anúncio, seu perfil será automaticamente marcado com o selo Verificado. Aproveite essa oportunidade para se destacar entre os demais usuários!
-      </p>
-     </div>
+        .modal {
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+        }
+        input[type="file"] {
+            max-width: 100%;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex flex-col min-h-screen">
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="text-center">
+                <i class="fas fa-spinner spin text-4xl"></i>
+                <p class="mt-2">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="bg-green-600 text-white p-4 flex items-center justify-center sticky top-0 z-10">
+            <h1 class="text-xl font-bold">Meu Perfil</h1>
+        </header>
+
+        <!-- Profile Content -->
+        <div class="flex-1 p-4">
+            <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+                <div class="flex flex-col sm:flex-row items-center">
+                    <div class="relative">
+                        <img id="user-image" src="https://placehold.co/100x100" alt="Imagem de perfil" class="rounded-full w-24 h-24 object-cover">
+                    </div>
+                    <div class="ml-4 text-center sm:text-left mt-4 sm:mt-0">
+                        <h2 id="user-name" class="text-2xl font-semibold flex items-center justify-center sm:justify-start">
+                            Nome do Usuário
+                        </h2>
+                        <p id="user-email" class="text-gray-600">email@exemplo.com</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold border-b pb-2">Informações Pessoais</h3>
+                    <div class="mt-4 space-y-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-user text-green-600 mr-2"></i>
+                            <span id="user-fullname" class="text-gray-700">Nome Completo: Nome do Usuário</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope text-green-600 mr-2"></i>
+                            <span id="user-email-info" class="text-gray-700">Email: email@exemplo.com</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-phone text-green-600 mr-2"></i>
+                            <span id="user-phone" class="text-gray-700">Telefone: (00) 0000-0000</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
+                            <span id="user-address" class="text-gray-700">Endereço: Rua Exemplo, 123</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold border-b pb-2">Configurações</h3>
+                    <div class="mt-4">
+                        <button onclick="editProfile()" class="w-full bg-green-600 text-white py-3 rounded-lg flex items-center justify-center hover:bg-green-700 transition duration-300">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar Perfil
+                        </button>
+                    </div>
+                </div>
+
+                <div id="verification-section" class="mt-6 bg-yellow-100 p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-yellow-800">Quer ganhar o selo Verificado?</h3>
+                    <p class="mt-2 text-gray-700">
+                        Isso irá aumentar a sua credibilidade na comunidade! Para obter o selo, basta clicar no botão abaixo,
+                        assistir a um anúncio e, ao final, você será reconhecido como um usuário verificado!
+                    </p>
+                    <button onclick="watchAd()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg flex items-center justify-center hover:bg-blue-700 transition duration-300">
+                        <i class="fas fa-video mr-2"></i>
+                        Clique aqui para assistir ao anúncio e obter seu selo! 🎥
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-   </div>
-  </div>
-  <!-- Modal for Editing Profile -->
-  <div class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden" id="edit-modal">
-   <div class="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
-    <h2 class="text-xl font-semibold mb-4">
-     Editar Perfil
-    </h2>
-    <div class="space-y-4">
-     <div class="flex items-center">
-      <img alt="Imagem de perfil do usuário" class="rounded-full w-24 h-24" id="edit-user-image-preview" src="https://placehold.co/100x100"/>
-      <input accept="image/*" class="ml-4" id="edit-user-image" onchange="previewImage(event)" type="file"/>
-     </div>
-     <div>
-      <label class="block text-gray-700">
-       Nome Completo
-      </label>
-      <input class="w-full border rounded-lg px-4 py-2" id="edit-fullname" type="text"/>
-     </div>
-     <div>
-      <label class="block text-gray-700">
-       Email
-      </label>
-      <input class="w-full border rounded-lg px-4 py-2" id="edit-email" type="email"/>
-     </div>
-     <div>
-      <label class="block text-gray-700">
-       Telefone
-      </label>
-      <input class="w-full border rounded-lg px-4 py-2" id="edit-phone" type="text"/>
-     </div>
-     <div>
-      <label class="block text-gray-700">
-       Endereço
-      </label>
-      <input class="w-full border rounded-lg px-4 py-2" id="edit-address" type="text"/>
-     </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden z-50">
+        <div class="min-h-screen px-4 text-center">
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Editar Perfil</h3>
+                    <div class="space-y-4">
+                        <div class="flex flex-col items-center">
+                            <img id="edit-user-image-preview" src="https://placehold.co/100x100" alt="Preview" class="rounded-full w-24 h-24 mb-2 object-cover">
+                            <input type="file" id="edit-user-image" accept="image/*" onchange="previewImage(event)" class="w-full">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                            <input type="text" id="edit-fullname" class="w-full p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="edit-email" class="w-full p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="tel" id="edit-phone" class="w-full p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+                            <input type="text" id="edit-address" class="w-full p-2 border rounded-md">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button onclick="saveProfile()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                        Salvar
+                    </button>
+                    <button onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mt-6 flex justify-end space-x-4">
-     <button class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300" onclick="closeModal()">
-      Cancelar
-     </button>
-     <button class="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300" onclick="saveProfile()">
-      Salvar
-     </button>
-    </div>
-   </div>
-  </div>
-  <script>
-   // Firebase configuration
+
+    <script>
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
             authDomain: "kelvinchat-f9499.firebaseapp.com",
@@ -173,128 +180,197 @@
         const database = firebase.database();
         const storage = firebase.storage();
 
-        let userId = "user123"; // Replace with the actual user ID
+        // Get userId from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId') || 'user123';
         let isVerified = false;
 
-        // Fetch user data from Firebase Realtime Database
-        function fetchUserData() {
-            database.ref('users/' + userId).once('value').then((snapshot) => {
+        // Show/Hide Loading
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        // Fetch user data
+        async function fetchUserData() {
+            showLoading();
+            try {
+                const snapshot = await database.ref('users/' + userId).once('value');
                 const userData = snapshot.val();
                 if (userData) {
                     document.getElementById('user-fullname').textContent = `Nome Completo: ${userData.firstName} ${userData.lastName}`;
                     document.getElementById('user-email-info').textContent = `Email: ${userData.email}`;
-                    document.getElementById('user-phone').textContent = `Telefone: ${userData.phone}`;
-                    document.getElementById('user-address').textContent = `Endereço: ${userData.address}`;
+                    document.getElementById('user-phone').textContent = `Telefone: ${userData.phone || ''}`;
+                    document.getElementById('user-address').textContent = `Endereço: ${userData.address || ''}`;
                     document.getElementById('user-name').textContent = `${userData.firstName} ${userData.lastName}`;
                     document.getElementById('user-email').textContent = userData.email;
-                    document.getElementById('user-image').src = userData.avatar || "https://placehold.co/100x100";
-                    isVerified = userData.verified;
+                    
+                    if (userData.avatar) {
+                        document.getElementById('user-image').src = userData.avatar;
+                    }
+                    
+                    isVerified = userData.verified || false;
                     if (isVerified) {
-                        document.getElementById('user-name').innerHTML += ` <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                        document.getElementById('user-name').innerHTML += ` <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                        updateVerificationSection(true);
                     }
                 }
-            });
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                alert("Erro ao carregar dados do usuário");
+            }
+            hideLoading();
         }
 
+        // Update verification section
+        function updateVerificationSection(isVerified) {
+            const section = document.getElementById('verification-section');
+            if (isVerified) {
+                section.innerHTML = `
+                    <h3 class="text-lg font-semibold text-green-800">
+                        Parabéns! Você é um usuário verificado
+                    </h3>
+                    <p class="mt-2 text-gray-700">
+                        Seu perfil possui o selo de verificação. Continue aproveitando sua experiência premium!
+                    </p>
+                `;
+            }
+        }
+
+        // Edit Profile
         function editProfile() {
-            document.getElementById('edit-modal').classList.remove('hidden');
             const fullname = document.getElementById('user-fullname').textContent.split(': ')[1];
-            const [firstName, lastName] = fullname.split(' ');
-            document.getElementById('edit-fullname').value = `${firstName} ${lastName}`;
-            document.getElementById('edit-email').value = document.getElementById('user-email-info').textContent.split(': ')[1];
-            document.getElementById('edit-phone').value = document.getElementById('user-phone').textContent.split(': ')[1];
-            document.getElementById('edit-address').value = document.getElementById('user-address').textContent.split(': ')[1];
+            const email = document.getElementById('user-email-info').textContent.split(': ')[1];
+            const phone = document.getElementById('user-phone').textContent.split(': ')[1];
+            const address = document.getElementById('user-address').textContent.split(': ')[1];
+            
+            document.getElementById('edit-fullname').value = fullname;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-phone').value = phone;
+            document.getElementById('edit-address').value = address;
             document.getElementById('edit-user-image-preview').src = document.getElementById('user-image').src;
+            
+            document.getElementById('edit-modal').classList.remove('hidden');
         }
 
+        // Close Modal
         function closeModal() {
             document.getElementById('edit-modal').classList.add('hidden');
         }
 
+        // Preview Image
         function previewImage(event) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                const output = document.getElementById('edit-user-image-preview');
-                output.src = reader.result;
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        }
-
-        function saveProfile() {
-            const fullname = document.getElementById('edit-fullname').value;
-            const [firstName, lastName] = fullname.split(' ');
-            const email = document.getElementById('edit-email').value;
-            const phone = document.getElementById('edit-phone').value;
-            const address = document.getElementById('edit-address').value;
-            const imageFile = document.getElementById('edit-user-image').files[0];
-
-            if (imageFile) {
-                const storageRef = storage.ref('avatars/' + userId);
-                storageRef.put(imageFile).then(() => {
-                    storageRef.getDownloadURL().then((url) => {
-                        updateUserProfile(firstName, lastName, email, phone, address, url);
-                    });
-                });
-            } else {
-                const currentAvatar = document.getElementById('edit-user-image-preview').src;
-                updateUserProfile(firstName, lastName, email, phone, address, currentAvatar);
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('edit-user-image-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         }
 
-        function updateUserProfile(firstName, lastName, email, phone, address, avatar) {
-            const userData = {
-                firstName,
-                lastName,
-                email,
-                phone,
-                address,
-                avatar,
-                verified: isVerified
-            };
+        // Save Profile
+        async function saveProfile() {
+            showLoading();
+            try {
+                const fullname = document.getElementById('edit-fullname').value;
+                const [firstName, lastName] = fullname.split(' ');
+                const email = document.getElementById('edit-email').value;
+                const phone = document.getElementById('edit-phone').value;
+                const address = document.getElementById('edit-address').value;
+                const imageFile = document.getElementById('edit-user-image').files[0];
 
-            database.ref('users/' + userId).set(userData).then(() => {
+                let avatarUrl = document.getElementById('user-image').src;
+
+                if (imageFile) {
+                    const storageRef = storage.ref('avatars/' + userId + '/' + Date.now() + '_' + imageFile.name);
+                    const snapshot = await storageRef.put(imageFile);
+                    avatarUrl = await snapshot.ref.getDownloadURL();
+                }
+
+                const userData = {
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    address,
+                    avatar: avatarUrl,
+                    verified: isVerified,
+                    id: userId,
+                    registrationDate: firebase.database.ServerValue.TIMESTAMP,
+                    banned: false,
+                    ceo: false,
+                    reason: ''
+                };
+
+                await database.ref('users/' + userId).update(userData);
+
                 document.getElementById('user-fullname').textContent = `Nome Completo: ${firstName} ${lastName}`;
                 document.getElementById('user-email-info').textContent = `Email: ${email}`;
                 document.getElementById('user-phone').textContent = `Telefone: ${phone}`;
                 document.getElementById('user-address').textContent = `Endereço: ${address}`;
                 document.getElementById('user-name').textContent = `${firstName} ${lastName}`;
                 document.getElementById('user-email').textContent = email;
-                document.getElementById('user-image').src = avatar;
+                document.getElementById('user-image').src = avatarUrl;
 
                 if (isVerified) {
-                    document.getElementById('user-name').innerHTML += ` <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                    document.getElementById('user-name').innerHTML += ` <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
                 }
 
                 closeModal();
-            });
+                alert('Perfil atualizado com sucesso!');
+            } catch (error) {
+                console.error("Error saving profile:", error);
+                alert("Erro ao salvar o perfil. Por favor, tente novamente.");
+            }
+            hideLoading();
         }
 
+        // Watch Ad and Get Verified
         function watchAd() {
+            showLoading();
             alert('Assistindo ao anúncio...');
-            // Simulate watching an ad
-            setTimeout(() => {
-                isVerified = true;
-                const userNameElement = document.getElementById('user-name');
-                userNameElement.innerHTML = `${userNameElement.textContent} <img alt="Ícone de verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
-                const verificationSection = document.getElementById('verification-section');
-                verificationSection.innerHTML = `
-                    <h3 class="text-lg font-semibold text-green-800">
-                        Parabéns! Você agora é um usuário verificado.
-                    </h3>
-                    <p class="mt-2 text-gray-700">
-                        Seu perfil foi atualizado com sucesso e agora você possui o selo de verificação. Aproveite essa oportunidade para se destacar entre os demais usuários!
-                    </p>
-                `;
-
-                // Update verified status in the database
-                database.ref('users/' + userId).update({ verified: true });
-
-                alert('Parabéns! Você agora é um usuário verificado.');
+            
+            setTimeout(async () => {
+                try {
+                    isVerified = true;
+                    await database.ref('users/' + userId).update({ verified: true });
+                    
+                    const userNameElement = document.getElementById('user-name');
+                    userNameElement.innerHTML = `${userNameElement.textContent} <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                    
+                    updateVerificationSection(true);
+                    alert('Parabéns! Você agora é um usuário verificado.');
+                } catch (error) {
+                    console.error("Error updating verification status:", error);
+                    alert("Erro ao verificar usuário. Por favor, tente novamente.");
+                }
+                hideLoading();
             }, 5000);
         }
 
-        // Fetch user data on page load
-        window.onload = fetchUserData;
-  </script>
- </body>
+        // Handle Android Back Button
+        function handleBackButton() {
+            if (!document.getElementById('edit-modal').classList.contains('hidden')) {
+                closeModal();
+                return true;
+            }
+            return false;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserData();
+            
+            // Handle back button for Android WebView
+            if (window.Android) {
+                document.addEventListener('backbutton', handleBackButton);
+            }
+        });
+    </script>
+</body>
 </html>
