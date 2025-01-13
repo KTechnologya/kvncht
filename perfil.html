@@ -148,22 +148,49 @@
                     updateUI(userData);
                 } else {
                     debug('Nenhum dado encontrado para o usuário');
+                    document.getElementById('userName').textContent = 'Usuário não encontrado';
                 }
             } catch (error) {
                 debug('Erro ao buscar dados: ' + error.message);
             }
         }
 
-        // Get User ID
+        // Get User ID - Versão corrigida
         function getUserId() {
+            let userId = null;
+            
             // Tentar pegar do Android
-            if (typeof Android !== 'undefined' && Android.getUserId) {
-                return Android.getUserId();
+            try {
+                if (typeof Android !== 'undefined' && Android.getUserId) {
+                    userId = Android.getUserId();
+                    debug('UserID obtido do Android: ' + userId);
+                }
+            } catch (error) {
+                debug('Erro ao obter UserID do Android: ' + error.message);
             }
             
-            // Tentar pegar da URL
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('userId');
+            // Se não conseguiu do Android, tentar da URL
+            if (!userId) {
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    userId = urlParams.get('userId');
+                    debug('UserID obtido da URL: ' + userId);
+                } catch (error) {
+                    debug('Erro ao obter UserID da URL: ' + error.message);
+                }
+            }
+            
+            // Se ainda não tiver userId, tentar obter do localStorage
+            if (!userId) {
+                try {
+                    userId = localStorage.getItem('userId');
+                    debug('UserID obtido do localStorage: ' + userId);
+                } catch (error) {
+                    debug('Erro ao obter UserID do localStorage: ' + error.message);
+                }
+            }
+            
+            return userId;
         }
 
         // Initialize
@@ -178,6 +205,8 @@
                     fetchUserData(userId);
                 } else {
                     debug('UserID não encontrado');
+                    document.getElementById('userName').textContent = 'ID do usuário não fornecido';
+                    document.getElementById('userEmail').textContent = 'Por favor, forneça um ID de usuário válido';
                 }
             } catch (error) {
                 debug('Erro na inicialização: ' + error.message);
