@@ -2,46 +2,26 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Meu Perfil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Usuário</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: contain;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .modal {
-            -webkit-backdrop-filter: blur(5px);
-            backdrop-filter: blur(5px);
-        }
-        input[type="file"] {
-            max-width: 100%;
         }
         .loading {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0,0,0,0.7);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            color: white;
         }
         .spin {
             animation: spin 1s linear infinite;
@@ -50,435 +30,235 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        * {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        input, textarea {
-            -webkit-user-select: auto;
-            user-select: auto;
-        }
-        .scroll-container {
-            -webkit-overflow-scrolling: touch;
-            overflow-y: auto;
-            height: 100%;
-            width: 100%;
-        }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="flex flex-col min-h-screen scroll-container">
-        <!-- Loading Indicator -->
-        <div id="loading" class="loading hidden">
-            <div class="text-center">
-                <i class="fas fa-spinner spin text-4xl"></i>
-                <p class="mt-2">Carregando...</p>
-            </div>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Loading -->
+    <div id="loading" class="loading hidden">
+        <div class="text-white text-center">
+            <i class="fas fa-spinner spin text-4xl"></i>
+            <p class="mt-2">Carregando...</p>
         </div>
+    </div>
 
-        <!-- Header -->
-        <header class="bg-green-600 text-white p-4 flex items-center justify-center sticky top-0 z-10">
-            <h1 class="text-xl font-bold">Meu Perfil</h1>
-        </header>
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Perfil do Usuário</h1>
+            <button id="logoutBtn" class="bg-blue-700 px-4 py-2 rounded hover:bg-blue-800">
+                Sair
+            </button>
+        </div>
+    </header>
 
-        <!-- Profile Content -->
-        <div class="flex-1 p-4">
-            <div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
-                <div class="flex flex-col sm:flex-row items-center">
-                    <div class="relative">
-                        <img id="user-image" src="https://placehold.co/100x100" alt="Imagem de perfil" class="rounded-full w-24 h-24 object-cover">
-                    </div>
-                    <div class="ml-4 text-center sm:text-left mt-4 sm:mt-0">
-                        <h2 id="user-name" class="text-2xl font-semibold flex items-center justify-center sm:justify-start">
-                            Nome do Usuário
-                        </h2>
-                        <p id="user-email" class="text-gray-600">email@exemplo.com</p>
-                    </div>
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-4">
+        <div class="bg-white rounded-lg shadow-md p-6 mt-4">
+            <!-- Profile Header -->
+            <div class="flex flex-col md:flex-row items-center gap-6 border-b pb-6">
+                <div class="relative">
+                    <img id="userAvatar" src="/api/placeholder/120/120" alt="Avatar" 
+                         class="w-32 h-32 rounded-full object-cover border-4 border-blue-600">
                 </div>
+                <div class="text-center md:text-left flex-1">
+                    <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+                        <h2 id="userName" class="text-2xl font-bold">Carregando...</h2>
+                        <span id="verifiedBadge" class="hidden">
+                            <i class="fas fa-check-circle text-blue-600"></i>
+                        </span>
+                    </div>
+                    <p id="userEmail" class="text-gray-600">Carregando...</p>
+                    <p id="userRole" class="mt-1 inline-block px-3 py-1 rounded-full text-sm font-semibold"></p>
+                </div>
+            </div>
 
-                <div class="mt-6">
+            <!-- User Details -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Personal Information -->
+                <div class="space-y-4">
                     <h3 class="text-lg font-semibold border-b pb-2">Informações Pessoais</h3>
-                    <div class="mt-4 space-y-4">
-                        <div class="flex items-center">
-                            <i class="fas fa-user text-green-600 mr-2"></i>
-                            <span id="user-fullname" class="text-gray-700">Nome Completo: Nome do Usuário</span>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-id-card w-6 text-blue-600"></i>
+                            <span id="userId" class="text-gray-700">Carregando...</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-envelope text-green-600 mr-2"></i>
-                            <span id="user-email-info" class="text-gray-700">Email: email@exemplo.com</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-phone w-6 text-blue-600"></i>
+                            <span id="userPhone" class="text-gray-700">Carregando...</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-phone text-green-600 mr-2"></i>
-                            <span id="user-phone" class="text-gray-700">Telefone: (00) 0000-0000</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-map-marker-alt w-6 text-blue-600"></i>
+                            <span id="userAddress" class="text-gray-700">Carregando...</span>
                         </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
-                            <span id="user-address" class="text-gray-700">Endereço: Rua Exemplo, 123</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar w-6 text-blue-600"></i>
+                            <span id="userRegistrationDate" class="text-gray-700">Carregando...</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold border-b pb-2">Configurações</h3>
-                    <div class="mt-4">
-                        <button onclick="editProfile()" class="w-full bg-green-600 text-white py-3 rounded-lg flex items-center justify-center hover:bg-green-700 transition duration-300">
-                            <i class="fas fa-edit mr-2"></i>
-                            Editar Perfil
-                        </button>
+                <!-- Account Status -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold border-b pb-2">Status da Conta</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-user-shield w-6 text-blue-600"></i>
+                            <span id="userVerificationStatus" class="text-gray-700">Carregando...</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-star w-6 text-blue-600"></i>
+                            <span id="userType" class="text-gray-700">Carregando...</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-shield-alt w-6 text-blue-600"></i>
+                            <span id="userAccountStatus" class="text-gray-700">Carregando...</span>
+                        </div>
+                        <div id="banReason" class="hidden mt-2 p-3 bg-red-100 rounded-lg">
+                            <p class="text-red-700"></p>
+                        </div>
                     </div>
-                </div>
-
-                <div id="verification-section" class="mt-6 bg-yellow-100 p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-yellow-800">Quer ganhar o selo Verificado?</h3>
-                    <p class="mt-2 text-gray-700">
-                        Isso irá aumentar a sua credibilidade na comunidade! Para obter o selo, basta clicar no botão abaixo,
-                        assistir a um anúncio e, ao final, você será reconhecido como um usuário verificado!
-                    </p>
-                    <button onclick="watchAd()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg flex items-center justify-center hover:bg-blue-700 transition duration-300">
-                        <i class="fas fa-video mr-2"></i>
-                        Clique aqui para assistir ao anúncio e obter seu selo! 🎥
-                    </button>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden z-50">
-        <div class="min-h-screen px-4 text-center">
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Editar Perfil</h3>
-                    <div class="space-y-4">
-                        <div class="flex flex-col items-center">
-                            <img id="edit-user-image-preview" src="https://placehold.co/100x100" alt="Preview" class="rounded-full w-24 h-24 mb-2 object-cover">
-                            <input type="file" id="edit-user-image" accept="image/*" onchange="previewImage(event)" class="w-full">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                            <input type="text" id="edit-fullname" class="w-full p-2 border rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" id="edit-email" class="w-full p-2 border rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                            <input type="tel" id="edit-phone" class="w-full p-2 border rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-                            <input type="text" id="edit-address" class="w-full p-2 border rounded-md">
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button onclick="saveProfile()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                        Salvar
-                    </button>
-                    <button onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
         // Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyAka2HFWwP9OHc_OC2IDFio0wPPtqADhmA",
-            authDomain: "kelvinchat-f9499.firebaseapp.com",
-            databaseURL: "https://kelvinchat-f9499-default-rtdb.firebaseio.com",
-            projectId: "kelvinchat-f9499",
-            storageBucket: "kelvinchat-f9499.appspot.com",
-            messagingSenderId: "972962322611",
-            appId: "1:972962322611:web:ff5416bb049abea350f8c6",
-            measurementId: "G-K99GCK98ZR"
+            // Suas configurações do Firebase aqui
         };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
-        const storage = firebase.storage();
 
-        // Initialize variables
-        let userId;
-        let isVerified = false;
+        // UI Elements
+        const loadingElement = document.getElementById('loading');
+        const logoutBtn = document.getElementById('logoutBtn');
 
-        // WebView Interface Handler
-        class WebViewInterface {
-            static isAndroid() {
-                return typeof Android !== 'undefined';
+        // Show/Hide Loading
+        const showLoading = () => loadingElement.classList.remove('hidden');
+        const hideLoading = () => loadingElement.classList.add('hidden');
+
+        // Format Date
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Data não disponível';
+            const date = new Date(timestamp);
+            return new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        // Update UI with User Data
+        function updateUI(userData) {
+            // Basic Info
+            document.getElementById('userName').textContent = `${userData.firstName || ''} ${userData.lastName || ''}`;
+            document.getElementById('userEmail').textContent = userData.email || 'Email não disponível';
+            document.getElementById('userId').textContent = `ID: ${userData.id || 'Não disponível'}`;
+            document.getElementById('userPhone').textContent = userData.phone || 'Telefone não cadastrado';
+            document.getElementById('userAddress').textContent = userData.address || 'Endereço não cadastrado';
+            document.getElementById('userRegistrationDate').textContent = formatDate(userData.registrationDate);
+
+            // Avatar
+            if (userData.avatar) {
+                document.getElementById('userAvatar').src = userData.avatar;
             }
 
-            static isIOS() {
-                return typeof webkit !== 'undefined' && typeof webkit.messageHandlers !== 'undefined';
+            // Verification Status
+            const verifiedBadge = document.getElementById('verifiedBadge');
+            if (userData.verified) {
+                verifiedBadge.classList.remove('hidden');
+                document.getElementById('userVerificationStatus').textContent = 'Conta Verificada';
+                document.getElementById('userVerificationStatus').classList.add('text-green-600');
+            } else {
+                verifiedBadge.classList.add('hidden');
+                document.getElementById('userVerificationStatus').textContent = 'Conta Não Verificada';
             }
 
-            static showToast(message) {
-                if (this.isAndroid()) {
-                    Android.showToast(message);
-                } else {
-                    alert(message);
+            // User Type
+            let userType = 'Usuário Comum';
+            let roleColor = 'bg-gray-200 text-gray-800';
+            if (userData.ceo) {
+                userType = 'CEO';
+                roleColor = 'bg-purple-200 text-purple-800';
+            } else if (userData.admin) {
+                userType = 'Administrador';
+                roleColor = 'bg-blue-200 text-blue-800';
+            }
+            document.getElementById('userRole').textContent = userType;
+            document.getElementById('userRole').className = `mt-1 inline-block px-3 py-1 rounded-full text-sm font-semibold ${roleColor}`;
+            document.getElementById('userType').textContent = userType;
+
+            // Account Status
+            const accountStatus = document.getElementById('userAccountStatus');
+            const banReason = document.getElementById('banReason');
+            if (userData.banned) {
+                accountStatus.textContent = 'Conta Banida';
+                accountStatus.classList.add('text-red-600');
+                if (userData.reason) {
+                    banReason.classList.remove('hidden');
+                    banReason.querySelector('p').textContent = `Motivo: ${userData.reason}`;
                 }
-            }
-
-            static goBack() {
-                if (this.isAndroid()) {
-                    Android.goBack();
-                } else if (this.isIOS()) {
-                    webkit.messageHandlers.goBack.postMessage({});
-                } else {
-                    window.history.back();
-                }
-            }
-        }
-
-        // Get userId
-        function getUserId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (WebViewInterface.isAndroid() && typeof Android.getUserId === 'function') {
-                userId = Android.getUserId();
-            } else if (WebViewInterface.isIOS() && webkit.messageHandlers.getUserId) {
-                webkit.messageHandlers.getUserId.postMessage({});
             } else {
-                userId = urlParams.get('userId') || 'user123';
-            }
-            return userId;
-        }
-
-        // Loading indicators
-        function showLoading() {
-            if (WebViewInterface.isAndroid() && typeof Android.showLoading === 'function') {
-                Android.showLoading();
-            } else {
-                document.getElementById('loading').classList.remove('hidden');
+                accountStatus.textContent = 'Conta Ativa';
+                accountStatus.classList.add('text-green-600');
+                banReason.classList.add('hidden');
             }
         }
 
-        function hideLoading() {
-            if (WebViewInterface.isAndroid() && typeof Android.hideLoading === 'function') {
-                Android.hideLoading();
-            } else {
-                document.getElementById('loading').classList.add('hidden');
-            }
-        }
-
-        // Fetch user data
-        async function fetchUserData() {
+        // Fetch User Data
+        async function fetchUserData(userId) {
             showLoading();
             try {
-                const snapshot = await database.ref('users/' + userId).once('value');
+                const snapshot = await database.ref(`users/${userId}`).once('value');
                 const userData = snapshot.val();
                 if (userData) {
-                    updateUIWithUserData(userData);
-                    isVerified = userData.verified || false;
+                    updateUI(userData);
+                } else {
+                    throw new Error('Usuário não encontrado');
                 }
             } catch (error) {
-                console.error("Error fetching user data:", error);
-                WebViewInterface.showToast("Erro ao carregar dados do usuário");
-            }
-            hideLoading();
-        }
-
-        // Preview image
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                    WebViewInterface.showToast('A imagem deve ter menos de 5MB');
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('edit-user-image-preview').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                console.error('Erro ao buscar dados:', error);
+                alert('Erro ao carregar dados do usuário');
+            } finally {
+                hideLoading();
             }
         }
 
-        // Edit Profile
-        function editProfile() {
-            const fullname = document.getElementById('user-fullname').textContent.split(': ')[1];
-            const email = document.getElementById('user-email-info').textContent.split(': ')[1];
-            const phone = document.getElementById('user-phone').textContent.split(': ')[1];
-            const address = document.getElementById('user-address').textContent.split(': ')[1];
-                
-                document.getElementById('edit-fullname').value = fullname;
-                document.getElementById('edit-email').value = email;
-                document.getElementById('edit-phone').value = phone;
-                document.getElementById('edit-address').value = address;
-                document.getElementById('edit-user-image-preview').src = document.getElementById('user-image').src;
-                
-                document.getElementById('edit-modal').classList.remove('hidden');
+        // Auth State Change Handler
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await fetchUserData(user.uid);
+            } else {
+                window.location.href = '/login.html';
             }
+        });
 
-            // Close Modal
-            function closeModal() {
-                document.getElementById('edit-modal').classList.add('hidden');
+        // Logout Handler
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                alert('Erro ao fazer logout');
             }
+        });
 
-            // Save Profile
-            async function saveProfile() {
-                showLoading();
-                try {
-                    const fullname = document.getElementById('edit-fullname').value;
-                    const [firstName, lastName] = fullname.split(' ');
-                    if (!firstName || !lastName) {
-                        WebViewInterface.showToast('Por favor, insira nome e sobrenome');
-                        hideLoading();
-                        return;
-                    }
-
-                    const email = document.getElementById('edit-email').value;
-                    const phone = document.getElementById('edit-phone').value;
-                    const address = document.getElementById('edit-address').value;
-                    const imageFile = document.getElementById('edit-user-image').files[0];
-
-                    let avatarUrl = document.getElementById('user-image').src;
-
-                    if (imageFile) {
-                        const storageRef = storage.ref('avatars/' + userId + '/' + Date.now() + '_' + imageFile.name);
-                        try {
-                            const snapshot = await storageRef.put(imageFile);
-                            avatarUrl = await snapshot.ref.getDownloadURL();
-                        } catch (error) {
-                            console.error("Error uploading image:", error);
-                            WebViewInterface.showToast('Erro ao fazer upload da imagem');
-                            hideLoading();
-                            return;
-                        }
-                    }
-
-                    const userData = {
-                        firstName,
-                        lastName,
-                        email,
-                        phone,
-                        address,
-                        avatar: avatarUrl,
-                        verified: isVerified,
-                        id: userId,
-                        registrationDate: firebase.database.ServerValue.TIMESTAMP,
-                        banned: false,
-                        ceo: false,
-                        reason: ''
-                    };
-
-                    await database.ref('users/' + userId).update(userData);
-                    updateUIWithUserData(userData);
-                    closeModal();
-                    WebViewInterface.showToast('Perfil atualizado com sucesso!');
-                } catch (error) {
-                    console.error("Error saving profile:", error);
-                    WebViewInterface.showToast('Erro ao salvar o perfil. Tente novamente.');
-                }
-                hideLoading();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // URL Parameter Handling
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUserId = urlParams.get('userId');
+            
+            if (urlUserId) {
+                fetchUserData(urlUserId);
             }
-
-            // Watch Ad
-            function watchAd() {
-                showLoading();
-                if (WebViewInterface.isAndroid() && typeof Android.showRewardedAd === 'function') {
-                    Android.showRewardedAd();
-                } else {
-                    simulateAdWatching();
-                }
-            }
-
-            // Ad reward callback
-            window.onAdRewarded = async function() {
-                try {
-                    isVerified = true;
-                    await database.ref('users/' + userId).update({ verified: true });
-                    updateVerificationUI();
-                    WebViewInterface.showToast('Parabéns! Você agora é um usuário verificado.');
-                } catch (error) {
-                    console.error("Error updating verification status:", error);
-                    WebViewInterface.showToast('Erro ao verificar usuário. Tente novamente.');
-                }
-                hideLoading();
-            };
-
-            // Simulate ad watching (for testing)
-            function simulateAdWatching() {
-                WebViewInterface.showToast('Assistindo ao anúncio...');
-                setTimeout(() => {
-                    window.onAdRewarded();
-                }, 5000);
-            }
-
-            // Update verification section UI
-            function updateVerificationSection(isVerified) {
-                const section = document.getElementById('verification-section');
-                if (isVerified) {
-                    section.innerHTML = `
-                        <h3 class="text-lg font-semibold text-green-800">
-                            Parabéns! Você é um usuário verificado
-                        </h3>
-                        <p class="mt-2 text-gray-700">
-                            Seu perfil possui o selo de verificação. Continue aproveitando sua experiência premium!
-                        </p>
-                    `;
-                }
-            }
-
-            // Update UI with user data
-            function updateUIWithUserData(userData) {
-                document.getElementById('user-fullname').textContent = `Nome Completo: ${userData.firstName} ${userData.lastName}`;
-                document.getElementById('user-email-info').textContent = `Email: ${userData.email}`;
-                document.getElementById('user-phone').textContent = `Telefone: ${userData.phone || ''}`;
-                document.getElementById('user-address').textContent = `Endereço: ${userData.address || ''}`;
-                document.getElementById('user-name').textContent = `${userData.firstName} ${userData.lastName}`;
-                document.getElementById('user-email').textContent = userData.email;
-                
-                if (userData.avatar) {
-                    document.getElementById('user-image').src = userData.avatar;
-                }
-                
-                if (userData.verified) {
-                    updateVerificationUI();
-                }
-            }
-
-            // Update verification UI
-            function updateVerificationUI() {
-                const userNameElement = document.getElementById('user-name');
-                if (!userNameElement.innerHTML.includes('verificar_1_qtfrdt.png')) {
-                    userNameElement.innerHTML += ` <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
-                }
-                updateVerificationSection(true);
-            }
-
-            // Handle back button
-            function handleBackButton() {
-                if (!document.getElementById('edit-modal').classList.contains('hidden')) {
-                    closeModal();
-                    return true;
-                }
-                WebViewInterface.goBack();
-                return true;
-            }
-
-            // Initialize
-            document.addEventListener('DOMContentLoaded', () => {
-                userId = getUserId();
-                fetchUserData();
-                
-                // Handle back button for WebView
-                if (WebViewInterface.isAndroid()) {
-                    document.addEventListener('backbutton', handleBackButton);
-                }
-                
-                // Prevent default touch behaviors
-                document.addEventListener('touchmove', function(e) {
-                    if (e.target.closest('.scroll-container')) return;
-                    e.preventDefault();
-                }, { passive: false });
-            });
-        </script>
-    </body>
+        });
+    </script>
+</body>
 </html>
