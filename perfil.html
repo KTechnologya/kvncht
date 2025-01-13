@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Meu Perfil</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
@@ -14,6 +16,12 @@
         body {
             font-family: 'Roboto', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: contain;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .modal {
             -webkit-backdrop-filter: blur(5px);
@@ -42,10 +50,25 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input, textarea {
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+        .scroll-container {
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+            height: 100%;
+            width: 100%;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
-    <div class="flex flex-col min-h-screen">
+    <div class="flex flex-col min-h-screen scroll-container">
         <!-- Loading Indicator -->
         <div id="loading" class="loading hidden">
             <div class="text-center">
@@ -180,18 +203,67 @@
         const database = firebase.database();
         const storage = firebase.storage();
 
-        // Get userId from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('userId') || 'user123';
+        // Initialize variables
+        let userId;
         let isVerified = false;
 
-        // Show/Hide Loading
+        // WebView Interface Handler
+        class WebViewInterface {
+            static isAndroid() {
+                return typeof Android !== 'undefined';
+            }
+
+            static isIOS() {
+                return typeof webkit !== 'undefined' && typeof webkit.messageHandlers !== 'undefined';
+            }
+
+            static showToast(message) {
+                if (this.isAndroid()) {
+                    Android.showToast(message);
+                } else {
+                    alert(message);
+                }
+            }
+
+            static goBack() {
+                if (this.isAndroid()) {
+                    Android.goBack();
+                } else if (this.isIOS()) {
+                    webkit.messageHandlers.goBack.postMessage({});
+                } else {
+                    window.history.back();
+                }
+            }
+        }
+
+        // Get userId
+        function getUserId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (WebViewInterface.isAndroid() && typeof Android.getUserId === 'function') {
+                userId = Android.getUserId();
+            } else if (WebViewInterface.isIOS() && webkit.messageHandlers.getUserId) {
+                webkit.messageHandlers.getUserId.postMessage({});
+            } else {
+                userId = urlParams.get('userId') || 'user123';
+            }
+            return userId;
+        }
+
+        // Loading indicators
         function showLoading() {
-            document.getElementById('loading').classList.remove('hidden');
+            if (WebViewInterface.isAndroid() && typeof Android.showLoading === 'function') {
+                Android.showLoading();
+            } else {
+                document.getElementById('loading').classList.remove('hidden');
+            }
         }
 
         function hideLoading() {
-            document.getElementById('loading').classList.add('hidden');
+            if (WebViewInterface.isAndroid() && typeof Android.hideLoading === 'function') {
+                Android.hideLoading();
+            } else {
+                document.getElementById('loading').classList.add('hidden');
+            }
         }
 
         // Fetch user data
@@ -201,42 +273,30 @@
                 const snapshot = await database.ref('users/' + userId).once('value');
                 const userData = snapshot.val();
                 if (userData) {
-                    document.getElementById('user-fullname').textContent = `Nome Completo: ${userData.firstName} ${userData.lastName}`;
-                    document.getElementById('user-email-info').textContent = `Email: ${userData.email}`;
-                    document.getElementById('user-phone').textContent = `Telefone: ${userData.phone || ''}`;
-                    document.getElementById('user-address').textContent = `Endereço: ${userData.address || ''}`;
-                    document.getElementById('user-name').textContent = `${userData.firstName} ${userData.lastName}`;
-                    document.getElementById('user-email').textContent = userData.email;
-                    
-                    if (userData.avatar) {
-                        document.getElementById('user-image').src = userData.avatar;
-                    }
-                    
+                    updateUIWithUserData(userData);
                     isVerified = userData.verified || false;
-                    if (isVerified) {
-                        document.getElementById('user-name').innerHTML += ` <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
-                        updateVerificationSection(true);
-                    }
                 }
             } catch (error) {
                 console.error("Error fetching user data:", error);
-                alert("Erro ao carregar dados do usuário");
+                WebViewInterface.showToast("Erro ao carregar dados do usuário");
             }
             hideLoading();
         }
 
-        // Update verification section
-        function updateVerificationSection(isVerified) {
-            const section = document.getElementById('verification-section');
-            if (isVerified) {
-                section.innerHTML = `
-                    <h3 class="text-lg font-semibold text-green-800">
-                        Parabéns! Você é um usuário verificado
-                    </h3>
-                    <p class="mt-2 text-gray-700">
-                        Seu perfil possui o selo de verificação. Continue aproveitando sua experiência premium!
-                    </p>
-                `;
+        // Preview image
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                    WebViewInterface.showToast('A imagem deve ter menos de 5MB');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('edit-user-image-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         }
 
@@ -246,131 +306,179 @@
             const email = document.getElementById('user-email-info').textContent.split(': ')[1];
             const phone = document.getElementById('user-phone').textContent.split(': ')[1];
             const address = document.getElementById('user-address').textContent.split(': ')[1];
-            
-            document.getElementById('edit-fullname').value = fullname;
-            document.getElementById('edit-email').value = email;
-            document.getElementById('edit-phone').value = phone;
-            document.getElementById('edit-address').value = address;
-            document.getElementById('edit-user-image-preview').src = document.getElementById('user-image').src;
-            
-            document.getElementById('edit-modal').classList.remove('hidden');
-        }
-
-        // Close Modal
-        function closeModal() {
-            document.getElementById('edit-modal').classList.add('hidden');
-        }
-
-        // Preview Image
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('edit-user-image-preview').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                
+                document.getElementById('edit-fullname').value = fullname;
+                document.getElementById('edit-email').value = email;
+                document.getElementById('edit-phone').value = phone;
+                document.getElementById('edit-address').value = address;
+                document.getElementById('edit-user-image-preview').src = document.getElementById('user-image').src;
+                
+                document.getElementById('edit-modal').classList.remove('hidden');
             }
-        }
 
-        // Save Profile
-        async function saveProfile() {
-            showLoading();
-            try {
-                const fullname = document.getElementById('edit-fullname').value;
-                const [firstName, lastName] = fullname.split(' ');
-                const email = document.getElementById('edit-email').value;
-                const phone = document.getElementById('edit-phone').value;
-                const address = document.getElementById('edit-address').value;
-                const imageFile = document.getElementById('edit-user-image').files[0];
-
-                let avatarUrl = document.getElementById('user-image').src;
-
-                if (imageFile) {
-                    const storageRef = storage.ref('avatars/' + userId + '/' + Date.now() + '_' + imageFile.name);
-                    const snapshot = await storageRef.put(imageFile);
-                    avatarUrl = await snapshot.ref.getDownloadURL();
-                }
-
-                const userData = {
-                    firstName,
-                    lastName,
-                    email,
-                    phone,
-                    address,
-                    avatar: avatarUrl,
-                    verified: isVerified,
-                    id: userId,
-                    registrationDate: firebase.database.ServerValue.TIMESTAMP,
-                    banned: false,
-                    ceo: false,
-                    reason: ''
-                };
-
-                await database.ref('users/' + userId).update(userData);
-
-                document.getElementById('user-fullname').textContent = `Nome Completo: ${firstName} ${lastName}`;
-                document.getElementById('user-email-info').textContent = `Email: ${email}`;
-                document.getElementById('user-phone').textContent = `Telefone: ${phone}`;
-                document.getElementById('user-address').textContent = `Endereço: ${address}`;
-                document.getElementById('user-name').textContent = `${firstName} ${lastName}`;
-                document.getElementById('user-email').textContent = email;
-                document.getElementById('user-image').src = avatarUrl;
-
-                if (isVerified) {
-                    document.getElementById('user-name').innerHTML += ` <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
-                }
-
-                closeModal();
-                alert('Perfil atualizado com sucesso!');
-            } catch (error) {
-                console.error("Error saving profile:", error);
-                alert("Erro ao salvar o perfil. Por favor, tente novamente.");
+            // Close Modal
+            function closeModal() {
+                document.getElementById('edit-modal').classList.add('hidden');
             }
-            hideLoading();
-        }
 
-        // Watch Ad and Get Verified
-        function watchAd() {
-            showLoading();
-            alert('Assistindo ao anúncio...');
-            
-            setTimeout(async () => {
+            // Save Profile
+            async function saveProfile() {
+                showLoading();
+                try {
+                    const fullname = document.getElementById('edit-fullname').value;
+                    const [firstName, lastName] = fullname.split(' ');
+                    if (!firstName || !lastName) {
+                        WebViewInterface.showToast('Por favor, insira nome e sobrenome');
+                        hideLoading();
+                        return;
+                    }
+
+                    const email = document.getElementById('edit-email').value;
+                    const phone = document.getElementById('edit-phone').value;
+                    const address = document.getElementById('edit-address').value;
+                    const imageFile = document.getElementById('edit-user-image').files[0];
+
+                    let avatarUrl = document.getElementById('user-image').src;
+
+                    if (imageFile) {
+                        const storageRef = storage.ref('avatars/' + userId + '/' + Date.now() + '_' + imageFile.name);
+                        try {
+                            const snapshot = await storageRef.put(imageFile);
+                            avatarUrl = await snapshot.ref.getDownloadURL();
+                        } catch (error) {
+                            console.error("Error uploading image:", error);
+                            WebViewInterface.showToast('Erro ao fazer upload da imagem');
+                            hideLoading();
+                            return;
+                        }
+                    }
+
+                    const userData = {
+                        firstName,
+                        lastName,
+                        email,
+                        phone,
+                        address,
+                        avatar: avatarUrl,
+                        verified: isVerified,
+                        id: userId,
+                        registrationDate: firebase.database.ServerValue.TIMESTAMP,
+                        banned: false,
+                        ceo: false,
+                        reason: ''
+                    };
+
+                    await database.ref('users/' + userId).update(userData);
+                    updateUIWithUserData(userData);
+                    closeModal();
+                    WebViewInterface.showToast('Perfil atualizado com sucesso!');
+                } catch (error) {
+                    console.error("Error saving profile:", error);
+                    WebViewInterface.showToast('Erro ao salvar o perfil. Tente novamente.');
+                }
+                hideLoading();
+            }
+
+            // Watch Ad
+            function watchAd() {
+                showLoading();
+                if (WebViewInterface.isAndroid() && typeof Android.showRewardedAd === 'function') {
+                    Android.showRewardedAd();
+                } else {
+                    simulateAdWatching();
+                }
+            }
+
+            // Ad reward callback
+            window.onAdRewarded = async function() {
                 try {
                     isVerified = true;
                     await database.ref('users/' + userId).update({ verified: true });
-                    
-                    const userNameElement = document.getElementById('user-name');
-                    userNameElement.innerHTML = `${userNameElement.textContent} <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
-                    
-                    updateVerificationSection(true);
-                    alert('Parabéns! Você agora é um usuário verificado.');
+                    updateVerificationUI();
+                    WebViewInterface.showToast('Parabéns! Você agora é um usuário verificado.');
                 } catch (error) {
                     console.error("Error updating verification status:", error);
-                    alert("Erro ao verificar usuário. Por favor, tente novamente.");
+                    WebViewInterface.showToast('Erro ao verificar usuário. Tente novamente.');
                 }
                 hideLoading();
-            }, 5000);
-        }
+            };
 
-        // Handle Android Back Button
-        function handleBackButton() {
-            if (!document.getElementById('edit-modal').classList.contains('hidden')) {
-                closeModal();
+            // Simulate ad watching (for testing)
+            function simulateAdWatching() {
+                WebViewInterface.showToast('Assistindo ao anúncio...');
+                setTimeout(() => {
+                    window.onAdRewarded();
+                }, 5000);
+            }
+
+            // Update verification section UI
+            function updateVerificationSection(isVerified) {
+                const section = document.getElementById('verification-section');
+                if (isVerified) {
+                    section.innerHTML = `
+                        <h3 class="text-lg font-semibold text-green-800">
+                            Parabéns! Você é um usuário verificado
+                        </h3>
+                        <p class="mt-2 text-gray-700">
+                            Seu perfil possui o selo de verificação. Continue aproveitando sua experiência premium!
+                        </p>
+                    `;
+                }
+            }
+
+            // Update UI with user data
+            function updateUIWithUserData(userData) {
+                document.getElementById('user-fullname').textContent = `Nome Completo: ${userData.firstName} ${userData.lastName}`;
+                document.getElementById('user-email-info').textContent = `Email: ${userData.email}`;
+                document.getElementById('user-phone').textContent = `Telefone: ${userData.phone || ''}`;
+                document.getElementById('user-address').textContent = `Endereço: ${userData.address || ''}`;
+                document.getElementById('user-name').textContent = `${userData.firstName} ${userData.lastName}`;
+                document.getElementById('user-email').textContent = userData.email;
+                
+                if (userData.avatar) {
+                    document.getElementById('user-image').src = userData.avatar;
+                }
+                
+                if (userData.verified) {
+                    updateVerificationUI();
+                }
+            }
+
+            // Update verification UI
+            function updateVerificationUI() {
+                const userNameElement = document.getElementById('user-name');
+                if (!userNameElement.innerHTML.includes('verificar_1_qtfrdt.png')) {
+                    userNameElement.innerHTML += ` <img alt="Verificado" class="inline w-4 h-4 ml-2" src="https://res.cloudinary.com/dfjdlqyjl/image/upload/v1736626740/verificar_1_qtfrdt.png"/>`;
+                }
+                updateVerificationSection(true);
+            }
+
+            // Handle back button
+            function handleBackButton() {
+                if (!document.getElementById('edit-modal').classList.contains('hidden')) {
+                    closeModal();
+                    return true;
+                }
+                WebViewInterface.goBack();
                 return true;
             }
-            return false;
-        }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchUserData();
-            
-            // Handle back button for Android WebView
-            if (window.Android) {
-                document.addEventListener('backbutton', handleBackButton);
-            }
-        });
-    </script>
-</body>
+            // Initialize
+            document.addEventListener('DOMContentLoaded', () => {
+                userId = getUserId();
+                fetchUserData();
+                
+                // Handle back button for WebView
+                if (WebViewInterface.isAndroid()) {
+                    document.addEventListener('backbutton', handleBackButton);
+                }
+                
+                // Prevent default touch behaviors
+                document.addEventListener('touchmove', function(e) {
+                    if (e.target.closest('.scroll-container')) return;
+                    e.preventDefault();
+                }, { passive: false });
+            });
+        </script>
+    </body>
 </html>
